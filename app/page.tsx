@@ -103,7 +103,7 @@ export default function LandingPage() {
             className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 leading-tight tracking-tight animate-slide-up"
             style={{ animationDelay: '0.2s' }}
           >
-            Manage your hostel <span className="gradient-text">intelligently</span>
+            Manage Your Hostel <span className="gradient-text">INTELLIGENTLY</span>
           </h1>
           
           <p 
@@ -131,25 +131,6 @@ export default function LandingPage() {
               View Features
               <ChevronDown className="ml-2 w-5 h-5" />
             </Button>
-          </div>
-
-          {/* Stats Section */}
-          <div 
-            className="grid grid-cols-3 gap-6 pt-16 border-t border-gray-200 animate-slide-up"
-            style={{ animationDelay: '0.5s' }}
-          >
-            <div className="space-y-2 hover:scale-105 transition-transform duration-300">
-              <div className="text-4xl font-bold gradient-text">500+</div>
-              <p className="text-gray-600 text-sm font-medium">Hostels Active</p>
-            </div>
-            <div className="space-y-2 hover:scale-105 transition-transform duration-300">
-              <div className="text-4xl font-bold gradient-text">50K+</div>
-              <p className="text-gray-600 text-sm font-medium">Users Worldwide</p>
-            </div>
-            <div className="space-y-2 hover:scale-105 transition-transform duration-300">
-              <div className="text-4xl font-bold gradient-text">99.9%</div>
-              <p className="text-gray-600 text-sm font-medium">Platform Uptime</p>
-            </div>
           </div>
         </div>
       </section>

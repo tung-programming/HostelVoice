@@ -89,9 +89,9 @@ export default function IssuesPage() {
   if (!user) return null
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="max-w-6xl mx-auto px-4 pt-4 pb-24 md:px-8 md:pt-8 md:pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Report & Track Issues</h1>
           <p className="text-muted-foreground">
@@ -103,7 +103,7 @@ export default function IssuesPage() {
         {user.role === 'student' && (
           <Button
             onClick={() => setShowForm(!showForm)}
-            className="mt-4 md:mt-0 bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+            className="mt-4 md:mt-0 bg-accent hover:bg-accent/90 text-accent-foreground gap-2 w-full md:w-auto"
           >
             <Plus className="w-4 h-4" />
             Report New Issue
@@ -114,7 +114,7 @@ export default function IssuesPage() {
       {/* Report Form */}
       {showForm && user.role === 'student' && (
         <div className="bg-card border border-border rounded-lg p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
             <h2 className="text-xl font-semibold">Report a New Issue</h2>
             <button
               onClick={() => setShowForm(false)}
@@ -169,15 +169,15 @@ export default function IssuesPage() {
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-3">
-              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
                 Submit Issue
               </Button>
               <Button
                 type="button"
                 onClick={() => setShowForm(false)}
                 variant="outline"
-                className="border-border"
+                className="border-border w-full sm:w-auto"
               >
                 Cancel
               </Button>
@@ -208,18 +208,18 @@ export default function IssuesPage() {
           issues.map((issue) => (
             <div
               key={issue.id}
-              className="bg-card border border-border rounded-lg p-6 hover:border-accent/50 transition-colors"
+              className="bg-card border border-border rounded-lg p-4 md:p-6 hover:border-accent/50 transition-colors"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     {getStatusIcon(issue.status)}
-                    <h3 className="text-lg font-semibold">{issue.title}</h3>
+                    <h3 className="text-base md:text-lg font-semibold line-clamp-1">{issue.title}</h3>
                   </div>
-                  <p className="text-muted-foreground mb-3">{issue.description}</p>
+                  <p className="text-muted-foreground mb-3 text-xs md:text-sm line-clamp-2">{issue.description}</p>
 
                   {/* Metadata */}
-                  <div className="flex flex-wrap gap-3 text-sm">
+                  <div className="flex flex-wrap gap-2 text-xs md:text-sm">
                     <span className="px-3 py-1 rounded-full bg-muted/50 text-muted-foreground">
                       {issue.category}
                     </span>
@@ -241,10 +241,10 @@ export default function IssuesPage() {
 
               {/* Action Buttons */}
               {user.role === 'student' && (
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-col sm:flex-row gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1 border-border hover:bg-muted/50 bg-transparent"
+                    className="flex-1 sm:flex-none sm:w-auto w-full border-border hover:bg-muted/50 bg-transparent"
                     disabled={issue.status === 'resolved'}
                   >
                     View Details

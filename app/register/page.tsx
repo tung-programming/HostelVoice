@@ -25,21 +25,21 @@ export default function RegisterPage() {
       <div className="absolute top-40 right-10 w-96 h-96 rounded-full bg-cyan-100 opacity-20 blur-3xl -z-10"></div>
       <div className="absolute bottom-0 left-20 w-72 h-72 rounded-full bg-purple-100 opacity-20 blur-3xl -z-10"></div>
 
-      <div className="w-full max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-16 animate-slide-up">
+      <div className="w-full max-w-4xl px-3 md:px-0">
+         {/* Header */}
+         <div className="text-center mb-8 md:mb-16 animate-slide-up">
           <Link href="/" className="inline-flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-sm">HV</span>
             </div>
             <span className="font-bold text-gray-900 text-lg">HostelVoice</span>
           </Link>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Create Your Account</h1>
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">Create Your Account</h1>
           <p className="text-lg text-gray-600">Choose your role to get started</p>
         </div>
 
         {/* Role Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12 px-4 md:px-0">
           {/* Student */}
           <Link href="/register/student" className="group">
             <div className="bg-white border-2 border-gray-200 hover:border-cyan-500 rounded-2xl p-8 transition-all duration-300 hover:shadow-xl h-full flex flex-col justify-between animate-slide-up" style={{ animationDelay: '0.1s' }}>
@@ -96,7 +96,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Footer */}
-        <div className="text-center animate-slide-up" style={{ animationDelay: '0.4s' }}>
+        <div className="text-center animate-slide-up px-4 md:px-0" style={{ animationDelay: '0.4s' }}>
           <p className="text-gray-600">Already have an account? <Link href="/login" className="text-cyan-600 hover:text-cyan-700 font-semibold">Sign In</Link></p>
         </div>
       </div>

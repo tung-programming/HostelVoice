@@ -91,7 +91,7 @@ export default function ManagementPage() {
   const occupancyRate = Math.round((totalOccupancy / totalCapacity) * 100)
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="max-w-7xl mx-auto px-4 pt-4 pb-24 md:px-8 md:pt-8 md:pb-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

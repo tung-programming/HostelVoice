@@ -73,7 +73,7 @@ export default function AnalyticsPage() {
   if (!user) return null
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="max-w-7xl mx-auto px-3 pt-3 pb-24 md:px-8 md:pt-8 md:pb-12">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Analytics & Reports</h1>
@@ -81,7 +81,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         {metrics.map((metric) => {
           const Icon = metric.icon
           const TrendIcon = metric.trend === 'up' ? TrendingUp : TrendingDown

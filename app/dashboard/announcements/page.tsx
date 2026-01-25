@@ -99,19 +99,19 @@ export default function AnnouncementsPage() {
   const regularAnnouncements = announcements.filter((a) => !a.isPinned)
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="max-w-6xl mx-auto px-3 pt-3 pb-24 md:px-8 md:pt-8 md:pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Announcements</h1>
-          <p className="text-muted-foreground">
+        <h1 className="text-xl md:text-3xl font-bold mb-1">Announcements</h1>
+        <p className="text-muted-foreground text-xs md:text-sm">
             Stay updated with the latest hostel announcements and news
           </p>
         </div>
         {user.role === 'caretaker' && (
           <Button
             onClick={() => setShowForm(!showForm)}
-            className="mt-4 md:mt-0 bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+            className="mt-4 md:mt-0 bg-accent hover:bg-accent/90 text-accent-foreground gap-2 w-full md:w-auto"
           >
             <Plus className="w-4 h-4" />
             Post Announcement
@@ -121,9 +121,9 @@ export default function AnnouncementsPage() {
 
       {/* Post Form */}
       {showForm && user.role === 'caretaker' && (
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Create New Announcement</h2>
+        <div className="bg-card border border-border rounded-lg p-4 md:p-6 mb-6 md:mb-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <h2 className="text-lg md:text-xl font-semibold">Create New Announcement</h2>
             <button
               onClick={() => setShowForm(false)}
               className="p-1 hover:bg-muted rounded"
@@ -176,15 +176,15 @@ export default function AnnouncementsPage() {
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-3">
-              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
                 Post Announcement
               </Button>
               <Button
                 type="button"
                 onClick={() => setShowForm(false)}
                 variant="outline"
-                className="border-border"
+                className="border-border w-full sm:w-auto"
               >
                 Cancel
               </Button>

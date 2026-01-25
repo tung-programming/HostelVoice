@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { LogOut, Menu, X } from 'lucide-react'
+import { LogOut, Menu, X, LayoutDashboard, AlertCircle, Bell, Search, Users, BarChart3, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function DashboardLayout({
@@ -87,6 +87,16 @@ export default function DashboardLayout({
 
   const menuItems = getRoleMenuItems()
 
+  const mobileIconMap: Record<string, React.ReactNode> = {
+    grid: <LayoutDashboard className="w-5 h-5" />,
+    alert: <AlertCircle className="w-5 h-5" />,
+    bell: <Bell className="w-5 h-5" />,
+    search: <Search className="w-5 h-5" />,
+    users: <Users className="w-5 h-5" />,
+    chart: <BarChart3 className="w-5 h-5" />,
+    settings: <Settings className="w-5 h-5" />
+  }
+
   return (
     <div className="dark bg-background text-foreground min-h-screen">
       {/* Mobile Header */}
@@ -107,7 +117,7 @@ export default function DashboardLayout({
         <aside
           className={`${
             isSidebarOpen ? 'block' : 'hidden'
-          } md:block w-full md:w-72 border-r border-gray-200 bg-white fixed md:relative h-screen md:h-auto z-40 overflow-y-auto shadow-sm`}
+          } md:block w-full md:w-72 border-r border-gray-200 bg-white/95 backdrop-blur fixed md:relative h-screen md:h-auto z-40 overflow-y-auto shadow-sm`}
         >
           <div className="p-6 space-y-8 h-full flex flex-col">
             {/* Logo */}
@@ -167,10 +177,29 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 md:ml-0 w-full">
+        <main className="flex-1 md:ml-0 w-full min-h-screen pb-24 md:pb-0">
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-border shadow-2xl">
+        <div className="flex items-center justify-around px-2 py-3">
+          {menuItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex flex-col items-center justify-center text-xs font-medium text-muted-foreground hover:text-foreground gap-1"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-muted/70">
+                {mobileIconMap[item.icon] || mobileIconMap.grid}
+              </div>
+              <span className="truncate max-w-[6rem] text-center">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
     </div>
   )
 }
