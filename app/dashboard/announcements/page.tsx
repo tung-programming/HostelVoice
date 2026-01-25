@@ -83,12 +83,12 @@ export default function AnnouncementsPage() {
   }
 
   const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      Maintenance: 'bg-accent/10 text-accent',
-      Policy: 'bg-secondary/10 text-secondary',
-      Services: 'bg-purple-500/10 text-purple-400',
-      Events: 'bg-cyan-500/10 text-cyan-400',
-      General: 'bg-muted/50 text-muted-foreground'
+    const colors: Record<string, { bg: string, text: string, border: string }> = {
+      Maintenance: { bg: 'rgba(242, 105, 24, 0.1)', text: '#f26918', border: 'rgba(242, 105, 24, 0.3)' },
+      Policy: { bg: 'rgba(1, 75, 137, 0.1)', text: '#014b89', border: 'rgba(1, 75, 137, 0.3)' },
+      Services: { bg: 'rgba(168, 85, 247, 0.1)', text: '#a855f7', border: 'rgba(168, 85, 247, 0.3)' },
+      Events: { bg: 'rgba(6, 182, 212, 0.1)', text: '#06b6d4', border: 'rgba(6, 182, 212, 0.3)' },
+      General: { bg: 'rgba(107, 114, 128, 0.1)', text: '#6b7280', border: 'rgba(107, 114, 128, 0.3)' }
     }
     return colors[category] || colors.General
   }
@@ -99,178 +99,265 @@ export default function AnnouncementsPage() {
   const regularAnnouncements = announcements.filter((a) => !a.isPinned)
 
   return (
-    <div className="max-w-6xl mx-auto px-3 pt-3 pb-24 md:px-8 md:pt-8 md:pb-12">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-        <div>
-        <h1 className="text-xl md:text-3xl font-bold mb-1">Announcements</h1>
-        <p className="text-muted-foreground text-xs md:text-sm">
-            Stay updated with the latest hostel announcements and news
-          </p>
-        </div>
-        {user.role === 'caretaker' && (
-          <Button
-            onClick={() => setShowForm(!showForm)}
-            className="mt-4 md:mt-0 bg-accent hover:bg-accent/90 text-accent-foreground gap-2 w-full md:w-auto"
-          >
-            <Plus className="w-4 h-4" />
-            Post Announcement
-          </Button>
-        )}
-      </div>
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.8; }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.6s ease-out;
+        }
+        .animate-pulse-slow {
+          animation: pulse 2s ease-in-out infinite;
+        }
+      `}</style>
 
-      {/* Post Form */}
-      {showForm && user.role === 'caretaker' && (
-        <div className="bg-card border border-border rounded-lg p-4 md:p-6 mb-6 md:mb-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-            <h2 className="text-lg md:text-xl font-semibold">Create New Announcement</h2>
-            <button
-              onClick={() => setShowForm(false)}
-              className="p-1 hover:bg-muted rounded"
+      {/* Background */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(1, 75, 137, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(1, 75, 137, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: "80px 80px",
+        }}
+      />
+
+      <div className="max-w-6xl mx-auto px-4 pt-6 pb-24 md:px-8 md:pt-12 md:pb-12 relative z-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 md:mb-12 animate-fade-in">
+          <div>
+            <h1 className="text-3xl md:text-5xl font-bold mb-2" style={{ color: '#014b89' }}>
+              Announcements
+            </h1>
+            <p className="text-base md:text-lg text-gray-600">
+              Stay updated with the latest hostel announcements and news
+            </p>
+          </div>
+          {(user.role === 'caretaker' || user.role === 'admin') && (
+            <Button
+              onClick={() => setShowForm(!showForm)}
+              className="text-white font-bold gap-2 w-full md:w-auto h-12 md:h-14 rounded-xl shadow-lg hover:shadow-xl transition-all text-base"
+              style={{ background: '#f26918' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#d95a0f'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#f26918'}
             >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Title */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Announcement Title</label>
-              <Input
-                type="text"
-                placeholder="e.g., WiFi Maintenance Schedule"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="bg-muted border-border"
-                required
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Category</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-muted border border-border focus:outline-none focus:ring-2 focus:ring-accent"
-              >
-                <option>General</option>
-                <option>Maintenance</option>
-                <option>Policy</option>
-                <option>Services</option>
-                <option>Events</option>
-              </select>
-            </div>
-
-            {/* Content */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Content</label>
-              <textarea
-                placeholder="Write your announcement here..."
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-muted border border-border focus:outline-none focus:ring-2 focus:ring-accent resize-none"
-                rows={5}
-                required
-              />
-            </div>
-
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
-                Post Announcement
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setShowForm(false)}
-                variant="outline"
-                className="border-border w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Pinned Announcements */}
-      {pinnedAnnouncements.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Pin className="w-5 h-5 text-accent" />
-            Pinned Announcements
-          </h2>
-          <div className="space-y-4">
-            {pinnedAnnouncements.map((announcement) => (
-              <div
-                key={announcement.id}
-                className="bg-card border-2 border-accent/30 rounded-lg p-6 hover:border-accent/50 transition-colors bg-gradient-to-r from-accent/5 to-transparent"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Megaphone className="w-5 h-5 text-accent" />
-                      <h3 className="text-lg font-semibold">{announcement.title}</h3>
-                    </div>
-                    <p className="text-muted-foreground">{announcement.content}</p>
-                  </div>
-                </div>
-
-                {/* Metadata */}
-                <div className="flex flex-wrap gap-3 text-sm">
-                  <span className={`px-3 py-1 rounded-full font-medium ${getCategoryColor(announcement.category)}`}>
-                    {announcement.category}
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-muted/50 text-muted-foreground">
-                    {announcement.author}
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-muted/50 text-muted-foreground">
-                    {announcement.createdAt}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Regular Announcements */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Recent Announcements</h2>
-        <div className="space-y-4">
-          {regularAnnouncements.length === 0 ? (
-            <div className="bg-card border border-border rounded-lg p-8 text-center">
-              <Megaphone className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No announcements yet</p>
-            </div>
-          ) : (
-            regularAnnouncements.map((announcement) => (
-              <div
-                key={announcement.id}
-                className="bg-card border border-border rounded-lg p-6 hover:border-accent/30 transition-colors"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-2">{announcement.title}</h3>
-                    <p className="text-muted-foreground">{announcement.content}</p>
-                  </div>
-                </div>
-
-                {/* Metadata */}
-                <div className="flex flex-wrap gap-3 text-sm">
-                  <span className={`px-3 py-1 rounded-full font-medium ${getCategoryColor(announcement.category)}`}>
-                    {announcement.category}
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-muted/50 text-muted-foreground">
-                    {announcement.author}
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-muted/50 text-muted-foreground">
-                    {announcement.createdAt}
-                  </span>
-                </div>
-              </div>
-            ))
+              <Plus className="w-5 h-5" />
+              Post Announcement
+            </Button>
           )}
+        </div>
+
+        {/* Post Form */}
+        {showForm && (user.role === 'caretaker' || user.role === 'admin') && (
+          <div className="bg-white border-2 rounded-3xl p-6 md:p-8 mb-8 shadow-xl animate-fade-in" style={{ borderColor: 'rgba(242, 105, 24, 0.2)' }}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold" style={{ color: '#014b89' }}>Create New Announcement</h2>
+              <button
+                onClick={() => setShowForm(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Title */}
+              <div>
+                <label className="text-sm font-bold text-gray-900 mb-2 block">Announcement Title *</label>
+                <Input
+                  type="text"
+                  placeholder="e.g., WiFi Maintenance Schedule"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12"
+                  required
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="text-sm font-bold text-gray-900 mb-2 block">Category *</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#f26918] focus:ring-[#f26918] bg-white text-gray-900 font-medium transition-all"
+                >
+                  <option>General</option>
+                  <option>Maintenance</option>
+                  <option>Policy</option>
+                  <option>Services</option>
+                  <option>Events</option>
+                </select>
+              </div>
+
+              {/* Content */}
+              <div>
+                <label className="text-sm font-bold text-gray-900 mb-2 block">Content *</label>
+                <textarea
+                  placeholder="Write your announcement here..."
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#f26918] focus:ring-[#f26918] resize-none font-medium"
+                  rows={5}
+                  required
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button 
+                  type="submit" 
+                  className="text-white font-bold w-full sm:flex-1 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  style={{ background: '#f26918' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#d95a0f'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#f26918'}
+                >
+                  Post Announcement
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  variant="outline"
+                  className="border-2 w-full sm:w-auto h-12 rounded-xl font-semibold"
+                  style={{ borderColor: '#014b89', color: '#014b89' }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Pinned Announcements */}
+        {pinnedAnnouncements.length > 0 && (
+          <div className="mb-8 md:mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-3" style={{ color: '#014b89' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center animate-pulse-slow" style={{ background: 'rgba(242, 105, 24, 0.15)' }}>
+                <Pin className="w-5 h-5" style={{ color: '#f26918' }} />
+              </div>
+              Pinned Announcements
+            </h2>
+            <div className="space-y-4">
+              {pinnedAnnouncements.map((announcement, index) => {
+                const categoryColor = getCategoryColor(announcement.category)
+                return (
+                  <div
+                    key={announcement.id}
+                    className="bg-white border-2 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 animate-fade-in"
+                    style={{ 
+                      borderColor: 'rgba(242, 105, 24, 0.3)',
+                      background: 'linear-gradient(to right, rgba(242, 105, 24, 0.05), transparent)',
+                      animationDelay: `${index * 0.1}s`
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(242, 105, 24, 0.15)' }}>
+                            <Megaphone className="w-5 h-5" style={{ color: '#f26918' }} />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900 flex-1">{announcement.title}</h3>
+                        </div>
+                        <p className="text-gray-700 leading-relaxed">{announcement.content}</p>
+                      </div>
+                    </div>
+
+                    {/* Metadata */}
+                    <div className="flex flex-wrap gap-2 pt-4 border-t-2 border-gray-100">
+                      <span 
+                        className="px-4 py-2 rounded-xl text-sm font-bold border-2"
+                        style={{ 
+                          background: categoryColor.bg, 
+                          color: categoryColor.text,
+                          borderColor: categoryColor.border
+                        }}
+                      >
+                        {announcement.category}
+                      </span>
+                      <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
+                        👤 {announcement.author}
+                      </span>
+                      <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
+                        📅 {new Date(announcement.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Regular Announcements */}
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: '#014b89' }}>Recent Announcements</h2>
+          <div className="space-y-4">
+            {regularAnnouncements.length === 0 ? (
+              <div className="bg-white border-2 border-gray-200 rounded-3xl p-12 md:p-16 text-center shadow-lg">
+                <div 
+                  className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+                  style={{ background: 'rgba(1, 75, 137, 0.1)' }}
+                >
+                  <Megaphone className="w-10 h-10" style={{ color: '#014b89' }} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">No announcements yet</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Check back later for important updates and news from the hostel management.
+                </p>
+              </div>
+            ) : (
+              regularAnnouncements.map((announcement, index) => {
+                const categoryColor = getCategoryColor(announcement.category)
+                return (
+                  <div
+                    key={announcement.id}
+                    className="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 hover:border-gray-300 hover:shadow-xl transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">{announcement.title}</h3>
+                        <p className="text-gray-700 leading-relaxed">{announcement.content}</p>
+                      </div>
+                    </div>
+
+                    {/* Metadata */}
+                    <div className="flex flex-wrap gap-2 pt-4 border-t-2 border-gray-100">
+                      <span 
+                        className="px-4 py-2 rounded-xl text-sm font-bold border-2"
+                        style={{ 
+                          background: categoryColor.bg, 
+                          color: categoryColor.text,
+                          borderColor: categoryColor.border
+                        }}
+                      >
+                        {announcement.category}
+                      </span>
+                      <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
+                        👤 {announcement.author}
+                      </span>
+                      <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
+                        📅 {new Date(announcement.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
         </div>
       </div>
     </div>
