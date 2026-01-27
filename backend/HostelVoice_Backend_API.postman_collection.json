@@ -1,0 +1,1285 @@
+{
+  "info": {
+    "name": "HostelVoice Backend API",
+    "description": "Complete API testing collection for HostelVoice backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🟢 Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Issues",
+      "item": [
+        {
+          "name": "Create Issue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"AC not working in Room 101\",\n  \"description\": \"The air conditioner is not cooling the room. Temperature is stuck at 28 degrees.\",\n  \"category\": \"maintenance\",\n  \"priority\": \"high\",\n  \"hostel_name\": \"North Wing Hostel\",\n  \"room_number\": \"101\",\n  \"location\": \"Room 101, First Floor\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/issues",
+              "host": ["{{base_url}}"],
+              "path": ["api", "issues"]
+            }
+          }
+        },
+        {
+          "name": "Get My Issues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/issues/my?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "issues", "my"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Issues (Staff)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/issues?page=1&limit=10&status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "issues"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                },
+                {
+                  "key": "category",
+                  "value": "maintenance",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Issue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/issues/{{issue_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "issues", "{{issue_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Assign Issue (Staff)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": \"CARETAKER-UUID-HERE\",\n  \"notes\": \"Assigning to check AC immediately\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/issues/{{issue_id}}/assign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "issues", "{{issue_id}}", "assign"]
+            }
+          }
+        },
+        {
+          "name": "Update Issue Status (Staff)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"notes\": \"Started repair work on the AC unit\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/issues/{{issue_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "issues", "{{issue_id}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Find Duplicate Issues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/issues/{{issue_id}}/duplicates?limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "issues", "{{issue_id}}", "duplicates"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Merge Issues (Staff)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"master_issue_id\": \"ISSUE-1-UUID\",\n  \"duplicate_issue_ids\": [\"ISSUE-2-UUID\", \"ISSUE-3-UUID\"],\n  \"merge_notes\": \"Merging duplicate AC complaints from same room\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/issues/merge",
+              "host": ["{{base_url}}"],
+              "path": ["api", "issues", "merge"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Announcements",
+      "item": [
+        {
+          "name": "Create Announcement (Staff)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Water Supply Maintenance\",\n  \"content\": \"The water supply will be cut off from 2 AM to 6 AM on Friday for maintenance.\",\n  \"category\": \"maintenance\",\n  \"priority\": \"high\",\n  \"target_role\": \"all\",\n  \"target_hostel\": \"North Wing Hostel\",\n  \"expires_at\": \"2026-02-03T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/announcements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "announcements"]
+            }
+          }
+        },
+        {
+          "name": "Get Announcements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/announcements?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "announcements"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Announcements (Staff)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/announcements/all?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "announcements", "all"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Announcement",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/announcements/{{announcement_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "announcements", "{{announcement_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Announcement",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Water Supply Maintenance\",\n  \"priority\": \"urgent\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/announcements/{{announcement_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "announcements", "{{announcement_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Announcement Active",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/announcements/{{announcement_id}}/toggle",
+              "host": ["{{base_url}}"],
+              "path": ["api", "announcements", "{{announcement_id}}", "toggle"]
+            }
+          }
+        },
+        {
+          "name": "Delete Announcement",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/announcements/{{announcement_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "announcements", "{{announcement_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lost & Found",
+      "item": [
+        {
+          "name": "Report Lost/Found Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"item_name\": \"Blue Backpack\",\n  \"description\": \"Navy blue backpack with laptop compartment\",\n  \"type\": \"lost\",\n  \"category\": \"accessories\",\n  \"location_lost\": \"Library near main gate\",\n  \"date_lost\": \"2026-01-27T10:30:00Z\",\n  \"contact_info\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/lostfound",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lostfound"]
+            }
+          }
+        },
+        {
+          "name": "Get Open Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/lostfound?page=1&limit=10&type=lost",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lostfound"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "lost"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/lostfound/my?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lostfound", "my"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Items (Staff)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/lostfound/all?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lostfound", "all"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Item",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/lostfound/{{item_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lostfound", "{{item_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Claim Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"This is my backpack, has my initials inside\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/lostfound/{{item_id}}/claim",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lostfound", "{{item_id}}", "claim"]
+            }
+          }
+        },
+        {
+          "name": "Close Item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"returned\",\n  \"notes\": \"Item successfully returned to owner\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/lostfound/{{item_id}}/close",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lostfound", "{{item_id}}", "close"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Residents",
+      "item": [
+        {
+          "name": "Add Resident Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guardian_name\": \"Rajesh Kumar\",\n  \"guardian_phone\": \"+91 9876543210\",\n  \"guardian_email\": \"rajesh@email.com\",\n  \"permanent_address\": \"123 Main Street, Delhi 110001\",\n  \"blood_group\": \"O+\",\n  \"emergency_contact\": \"9876543210\",\n  \"check_in_date\": \"2025-08-01T00:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/residents",
+              "host": ["{{base_url}}"],
+              "path": ["api", "residents"]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/residents/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "residents", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guardian_phone\": \"+91 9999999999\",\n  \"medical_conditions\": \"Allergic to peanuts\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/residents/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "residents", "me"]
+            }
+          }
+        },
+        {
+          "name": "Get All Residents (Staff)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/residents?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "residents"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Residents by Hostel (Staff)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/residents/hostel/North%20Wing%20Hostel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "residents", "hostel", "North%20Wing%20Hostel"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications?page=1&limit=20&unread=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "unread",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/count",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "count"]
+            }
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notification_ids\": [\"notif-id-1\", \"notif-id-2\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/read",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/read-all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "read-all"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Issues Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/issues-summary?hostel_name=North%20Wing%20Hostel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "issues-summary"],
+              "query": [
+                {
+                  "key": "hostel_name",
+                  "value": "North%20Wing%20Hostel"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resolution Time",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/resolution-time?category=maintenance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "resolution-time"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "maintenance"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Category Frequency",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/category-frequency?period=30",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "category-frequency"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Hostel Density (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/hostel-density?period=30",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "hostel-density"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Status Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/status-trends?period=30",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "status-trends"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "File Upload",
+      "item": [
+        {
+          "name": "Get Signed Upload URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bucket\": \"issue-images\",\n  \"filename\": \"issue-photo.jpg\",\n  \"contentType\": \"image/jpeg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/upload/signed-url",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload", "signed-url"]
+            }
+          }
+        },
+        {
+          "name": "Get Public URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/upload/public-url?bucket=issue-images&path=user-id/filename.jpg",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload", "public-url"],
+              "query": [
+                {
+                  "key": "bucket",
+                  "value": "issue-images"
+                },
+                {
+                  "key": "path",
+                  "value": "user-id/filename.jpg"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List My Files",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/upload/my-files/issue-images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload", "my-files", "issue-images"]
+            }
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bucket\": \"issue-images\",\n  \"path\": \"user-id/filename.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/upload/file",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload", "file"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Pending Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/pending-users?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "pending-users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve User (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"STUDENT-USER-UUID\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/approve-user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "approve-user"]
+            }
+          }
+        },
+        {
+          "name": "Reject User (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"STUDENT-USER-UUID\",\n  \"rejection_reason\": \"Incomplete registration details\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/reject-user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "reject-user"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users?page=1&limit=10&role=student",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "role",
+                  "value": "student"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Logs (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/audit-logs?page=1&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "audit-logs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get System Stats (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Hostels (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/hostels",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "hostels"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "issue_id",
+      "value": ""
+    },
+    {
+      "key": "announcement_id",
+      "value": ""
+    },
+    {
+      "key": "item_id",
+      "value": ""
+    }
+  ]
+}
