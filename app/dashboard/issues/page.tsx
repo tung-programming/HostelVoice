@@ -1,89 +1,193 @@
 'use client'
 
-import React from "react"
-
-import { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { issuesApi, Issue, ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { AlertCircle, X, Plus, CheckCircle, Clock, ArrowRight } from 'lucide-react'
-
-interface Issue {
-  id: string
-  title: string
-  description: string
-  category: string
-  status: 'open' | 'in-progress' | 'resolved'
-  createdAt: string
-  updatedAt: string
-}
+import { AlertCircle, X, Plus, CheckCircle, Clock, ArrowRight, Loader2, RefreshCw, UserPlus } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function IssuesPage() {
   const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
-  const [issues, setIssues] = useState<Issue[]>([
-    {
-      id: '1',
-      title: 'Water leakage in bathroom',
-      description: 'There is a continuous leak from the ceiling',
-      category: 'Maintenance',
-      status: 'in-progress',
-      createdAt: '2026-01-20',
-      updatedAt: '2026-01-22'
-    },
-    {
-      id: '2',
-      title: 'AC not working properly',
-      description: 'AC is making unusual noise and not cooling',
-      category: 'Electrical',
-      status: 'open',
-      createdAt: '2026-01-23',
-      updatedAt: '2026-01-23'
-    }
-  ])
+  const [issues, setIssues] = useState<Issue[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  // For viewing issue details
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [detailsIssue, setDetailsIssue] = useState<Issue | null>(null)
+  
+  // For staff: assignment modal
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
+  const [assignData, setAssignData] = useState({ assigned_to: '', notes: '' })
+  
+  // For staff: status update modal
+  const [showStatusModal, setShowStatusModal] = useState(false)
+  const [statusData, setStatusData] = useState({ status: '', notes: '' })
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'Maintenance'
+    category: 'maintenance',
+    priority: 'medium',
+    location: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const newIssue: Issue = {
-      id: String(issues.length + 1),
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      status: 'open',
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0]
+  // Fetch issues
+  const fetchIssues = useCallback(async () => {
+    if (!user) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = user.role === 'student'
+        ? await issuesApi.getMyIssues(1, 50)
+        : await issuesApi.getAllIssues({ page: 1, limit: 50 })
+
+      if (response.data) {
+        setIssues(response.data)
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Failed to load issues'
+      setError(message)
+      toast.error(message)
+    } finally {
+      setIsLoading(false)
     }
-    setIssues([newIssue, ...issues])
-    setFormData({ title: '', description: '', category: 'Maintenance' })
-    setShowForm(false)
+  }, [user])
+
+  useEffect(() => {
+    fetchIssues()
+  }, [fetchIssues])
+
+  // Create issue
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+
+    setIsSubmitting(true)
+
+    try {
+      const response = await issuesApi.create({
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        priority: formData.priority,
+        hostel_name: user.hostelName,
+        room_number: user.roomNumber,
+        location: formData.location || undefined,
+      })
+
+      if (response.data) {
+        setIssues(prev => [response.data!, ...prev])
+        toast.success('Issue reported successfully!')
+        setFormData({ title: '', description: '', category: 'maintenance', priority: 'medium', location: '' })
+        setShowForm(false)
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Failed to create issue'
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const getStatusIcon = (status: Issue['status']) => {
+  // Assign issue (staff only)
+  const handleAssign = async () => {
+    if (!selectedIssue || !assignData.assigned_to) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await issuesApi.assign(selectedIssue.id, {
+        assigned_to: assignData.assigned_to,
+        notes: assignData.notes || undefined,
+      })
+
+      if (response.data) {
+        setIssues(prev => prev.map(i => i.id === selectedIssue.id ? response.data! : i))
+        toast.success('Issue assigned successfully!')
+        setShowAssignModal(false)
+        setSelectedIssue(null)
+        setAssignData({ assigned_to: '', notes: '' })
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Failed to assign issue'
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Update status (staff only)
+  const handleStatusUpdate = async () => {
+    if (!selectedIssue || !statusData.status) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await issuesApi.updateStatus(selectedIssue.id, {
+        status: statusData.status,
+        notes: statusData.notes || undefined,
+      })
+
+      if (response.data) {
+        setIssues(prev => prev.map(i => i.id === selectedIssue.id ? response.data! : i))
+        toast.success('Status updated successfully!')
+        setShowStatusModal(false)
+        setSelectedIssue(null)
+        setStatusData({ status: '', notes: '' })
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Failed to update status'
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'resolved':
+      case 'closed':
         return <CheckCircle className="w-5 h-5" style={{ color: '#10b981' }} />
-      case 'in-progress':
+      case 'in_progress':
         return <Clock className="w-5 h-5" style={{ color: '#f26918' }} />
       default:
         return <AlertCircle className="w-5 h-5" style={{ color: '#014b89' }} />
     }
   }
 
-  const getStatusColor = (status: Issue['status']) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'resolved':
+      case 'closed':
         return { bg: 'rgba(16, 185, 129, 0.1)', text: '#10b981', border: 'rgba(16, 185, 129, 0.3)' }
-      case 'in-progress':
+      case 'in_progress':
         return { bg: 'rgba(242, 105, 24, 0.1)', text: '#f26918', border: 'rgba(242, 105, 24, 0.3)' }
       default:
         return { bg: 'rgba(1, 75, 137, 0.1)', text: '#014b89', border: 'rgba(1, 75, 137, 0.3)' }
     }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return { bg: 'rgba(239, 68, 68, 0.1)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' }
+      case 'high':
+        return { bg: 'rgba(249, 115, 22, 0.1)', text: '#f97316', border: 'rgba(249, 115, 22, 0.3)' }
+      case 'medium':
+        return { bg: 'rgba(234, 179, 8, 0.1)', text: '#eab308', border: 'rgba(234, 179, 8, 0.3)' }
+      default:
+        return { bg: 'rgba(34, 197, 94, 0.1)', text: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' }
+    }
+  }
+
+  const formatStatus = (status: string) => {
+    return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
   }
 
   if (!user) return null
@@ -92,18 +196,10 @@ export default function IssuesPage() {
     <div className="min-h-screen bg-white relative overflow-hidden">
       <style jsx>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in {
-          animation: fadeIn 0.6s ease-out;
-        }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out; }
       `}</style>
 
       {/* Background */}
@@ -131,18 +227,28 @@ export default function IssuesPage() {
                 : 'Manage and track all reported issues'}
             </p>
           </div>
-          {user.role === 'student' && (
+          <div className="flex gap-3">
             <Button
-              onClick={() => setShowForm(!showForm)}
-              className="text-white font-bold gap-2 w-full md:w-auto h-12 md:h-14 rounded-xl shadow-lg hover:shadow-xl transition-all text-base"
-              style={{ background: '#014b89' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#012d52'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#014b89'}
+              onClick={fetchIssues}
+              variant="outline"
+              className="gap-2 h-12 rounded-xl font-semibold border-2"
+              style={{ borderColor: '#014b89', color: '#014b89' }}
+              disabled={isLoading}
             >
-              <Plus className="w-5 h-5" />
-              Report New Issue
+              <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
-          )}
+            {user.role === 'student' && (
+              <Button
+                onClick={() => setShowForm(!showForm)}
+                className="text-white font-bold gap-2 h-12 md:h-14 rounded-xl shadow-lg hover:shadow-xl transition-all text-base"
+                style={{ background: '#014b89' }}
+              >
+                <Plus className="w-5 h-5" />
+                Report New Issue
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Report Form */}
@@ -150,16 +256,12 @@ export default function IssuesPage() {
           <div className="bg-white border-2 rounded-3xl p-6 md:p-8 mb-8 shadow-xl animate-fade-in" style={{ borderColor: 'rgba(1, 75, 137, 0.2)' }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl md:text-3xl font-bold" style={{ color: '#014b89' }}>Report a New Issue</h2>
-              <button
-                onClick={() => setShowForm(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
+              <button onClick={() => setShowForm(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                 <X className="w-6 h-6 text-gray-600" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Title */}
               <div>
                 <label className="text-sm font-bold text-gray-900 mb-2 block">Issue Title *</label>
                 <Input
@@ -167,51 +269,73 @@ export default function IssuesPage() {
                   placeholder="e.g., Water leakage in bathroom"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-12"
+                  className="border-2 border-gray-200 focus:border-[#014b89] rounded-xl h-12"
                   required
                 />
               </div>
 
-              {/* Category */}
-              <div>
-                <label className="text-sm font-bold text-gray-900 mb-2 block">Category *</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#014b89] focus:ring-[#014b89] bg-white text-gray-900 font-medium transition-all"
-                >
-                  <option>Maintenance</option>
-                  <option>Electrical</option>
-                  <option>Plumbing</option>
-                  <option>Cleanliness</option>
-                  <option>Safety</option>
-                  <option>Other</option>
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm font-bold text-gray-900 mb-2 block">Category *</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#014b89] bg-white text-gray-900 font-medium"
+                  >
+                    <option value="maintenance">Maintenance</option>
+                    <option value="cleanliness">Cleanliness</option>
+                    <option value="security">Security</option>
+                    <option value="food">Food</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-gray-900 mb-2 block">Priority *</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#014b89] bg-white text-gray-900 font-medium"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Description */}
+              <div>
+                <label className="text-sm font-bold text-gray-900 mb-2 block">Location (Optional)</label>
+                <Input
+                  type="text"
+                  placeholder="e.g., Room 101, First Floor"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="border-2 border-gray-200 focus:border-[#014b89] rounded-xl h-12"
+                />
+              </div>
+
               <div>
                 <label className="text-sm font-bold text-gray-900 mb-2 block">Description *</label>
                 <textarea
                   placeholder="Provide details about the issue..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#014b89] focus:ring-[#014b89] resize-none font-medium"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#014b89] resize-none font-medium"
                   rows={4}
                   required
                 />
               </div>
 
-              {/* Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button 
                   type="submit" 
-                  className="text-white font-bold w-full sm:flex-1 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  className="text-white font-bold w-full sm:flex-1 h-12 rounded-xl shadow-lg"
                   style={{ background: '#014b89' }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#012d52'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#014b89'}
+                  disabled={isSubmitting}
                 >
-                  Submit Issue
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit Issue'}
                 </Button>
                 <Button
                   type="button"
@@ -227,113 +351,434 @@ export default function IssuesPage() {
           </div>
         )}
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: '#014b89' }} />
+            <p className="text-gray-600 font-medium">Loading issues...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-8 text-center mb-8">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-red-700 mb-2">Failed to Load Issues</h3>
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={fetchIssues} className="bg-red-600 hover:bg-red-700 text-white">
+              Try Again
+            </Button>
+          </div>
+        )}
+
         {/* Issues List */}
-        <div className="space-y-4 md:space-y-6">
-          {issues.length === 0 ? (
-            <div className="bg-white border-2 border-gray-200 rounded-3xl p-12 md:p-16 text-center shadow-lg animate-fade-in">
-              <div 
-                className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
-                style={{ background: 'rgba(1, 75, 137, 0.1)' }}
-              >
-                <AlertCircle className="w-10 h-10" style={{ color: '#014b89' }} />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                {user.role === 'student' ? 'No issues reported yet' : 'No issues to manage'}
-              </h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                {user.role === 'student' 
-                  ? 'When you report an issue, it will appear here and you can track its progress'
-                  : 'All reported issues will appear here for management'}
-              </p>
-              {user.role === 'student' && (
-                <Button
-                  onClick={() => setShowForm(true)}
-                  className="text-white font-bold gap-2 h-12 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all"
-                  style={{ background: '#014b89' }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#012d52'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#014b89'}
-                >
-                  <Plus className="w-5 h-5" />
-                  Report Your First Issue
-                </Button>
-              )}
-            </div>
-          ) : (
-            issues.map((issue, index) => {
-              const statusColor = getStatusColor(issue.status)
-              return (
-                <div
-                  key={issue.id}
-                  className="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 hover:border-gray-300 hover:shadow-xl transition-all duration-300 animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div 
-                          className="w-10 h-10 rounded-xl flex items-center justify-center"
-                          style={{ background: statusColor.bg }}
-                        >
-                          {getStatusIcon(issue.status)}
-                        </div>
-                        <h3 className="text-lg md:text-xl font-bold text-gray-900 flex-1">{issue.title}</h3>
-                      </div>
-                      <p className="text-gray-600 mb-4 leading-relaxed">{issue.description}</p>
-
-                      {/* Metadata */}
-                      <div className="flex flex-wrap gap-2">
-                        <span className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-2 border-gray-200">
-                          {issue.category}
-                        </span>
-                        <span 
-                          className="px-4 py-2 rounded-xl text-sm font-bold border-2"
-                          style={{ 
-                            background: statusColor.bg, 
-                            color: statusColor.text,
-                            borderColor: statusColor.border
-                          }}
-                        >
-                          {issue.status.charAt(0).toUpperCase() + issue.status.slice(1).replace('-', ' ')}
-                        </span>
-                        <span className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-2 border-gray-200">
-                          ID: #{issue.id}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dates */}
-                  <div className="text-sm text-gray-600 border-t-2 border-gray-100 pt-4 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">Reported:</span>
-                      <span>{new Date(issue.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">Last Updated:</span>
-                      <span>{new Date(issue.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  {user.role === 'student' && (
-                    <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                      <Button
-                        variant="outline"
-                        className="flex-1 sm:flex-none border-2 font-semibold h-11 rounded-xl gap-2 group transition-all"
-                        style={{ borderColor: issue.status === 'resolved' ? '#e5e7eb' : '#014b89', color: issue.status === 'resolved' ? '#9ca3af' : '#014b89' }}
-                        disabled={issue.status === 'resolved'}
-                      >
-                        View Details
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </div>
-                  )}
+        {!isLoading && !error && (
+          <div className="space-y-4 md:space-y-6">
+            {issues.length === 0 ? (
+              <div className="bg-white border-2 border-gray-200 rounded-3xl p-12 md:p-16 text-center shadow-lg animate-fade-in">
+                <div className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: 'rgba(1, 75, 137, 0.1)' }}>
+                  <AlertCircle className="w-10 h-10" style={{ color: '#014b89' }} />
                 </div>
-              )
-            })
-          )}
-        </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  {user.role === 'student' ? 'No issues reported yet' : 'No issues to manage'}
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  {user.role === 'student' 
+                    ? 'When you report an issue, it will appear here and you can track its progress'
+                    : 'All reported issues will appear here for management'}
+                </p>
+                {user.role === 'student' && (
+                  <Button
+                    onClick={() => setShowForm(true)}
+                    className="text-white font-bold gap-2 h-12 px-8 rounded-xl shadow-lg"
+                    style={{ background: '#014b89' }}
+                  >
+                    <Plus className="w-5 h-5" />
+                    Report Your First Issue
+                  </Button>
+                )}
+              </div>
+            ) : (
+              issues.map((issue, index) => {
+                const statusColor = getStatusColor(issue.status)
+                const priorityColor = getPriorityColor(issue.priority)
+                return (
+                  <div
+                    key={issue.id}
+                    className="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 hover:border-gray-300 hover:shadow-xl transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: statusColor.bg }}>
+                            {getStatusIcon(issue.status)}
+                          </div>
+                          <h3 className="text-lg md:text-xl font-bold text-gray-900 flex-1">{issue.title}</h3>
+                        </div>
+                        <p className="text-gray-600 mb-4 leading-relaxed">{issue.description}</p>
+
+                        {/* Metadata */}
+                        <div className="flex flex-wrap gap-2">
+                          <span className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-2 border-gray-200 capitalize">
+                            {issue.category}
+                          </span>
+                          <span 
+                            className="px-4 py-2 rounded-xl text-sm font-bold border-2"
+                            style={{ background: statusColor.bg, color: statusColor.text, borderColor: statusColor.border }}
+                          >
+                            {formatStatus(issue.status)}
+                          </span>
+                          <span 
+                            className="px-4 py-2 rounded-xl text-sm font-bold border-2 capitalize"
+                            style={{ background: priorityColor.bg, color: priorityColor.text, borderColor: priorityColor.border }}
+                          >
+                            {issue.priority} Priority
+                          </span>
+                          {issue.hostel_name && (
+                            <span className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-2 border-gray-200">
+                              📍 {issue.hostel_name}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Assignee info */}
+                        {issue.assignee && (
+                          <div className="mt-4 px-4 py-2 rounded-xl bg-blue-50 border-2 border-blue-100 inline-flex items-center gap-2">
+                            <UserPlus className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-700">
+                              Assigned to: {issue.assignee.full_name}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dates */}
+                    <div className="text-sm text-gray-600 border-t-2 border-gray-100 pt-4 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">Reported:</span>
+                        <span>{new Date(issue.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      </div>
+                      {issue.resolved_at && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">Resolved:</span>
+                          <span>{new Date(issue.resolved_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    {(user.role === 'caretaker' || user.role === 'admin') && issue.status !== 'resolved' && issue.status !== 'closed' && (
+                      <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                        {!issue.assigned_to && (
+                          <Button
+                            onClick={() => {
+                              setSelectedIssue(issue)
+                              setShowAssignModal(true)
+                            }}
+                            variant="outline"
+                            className="flex-1 sm:flex-none border-2 font-semibold h-11 rounded-xl gap-2"
+                            style={{ borderColor: '#014b89', color: '#014b89' }}
+                          >
+                            <UserPlus className="w-4 h-4" />
+                            Assign
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => {
+                            setSelectedIssue(issue)
+                            setStatusData({ status: '', notes: '' })
+                            setShowStatusModal(true)
+                          }}
+                          className="flex-1 sm:flex-none font-semibold h-11 rounded-xl gap-2 text-white"
+                          style={{ background: '#f26918' }}
+                        >
+                          Update Status
+                        </Button>
+                      </div>
+                    )}
+
+                    {user.role === 'student' && (
+                      <div className="mt-6">
+                        <Button
+                          onClick={() => {
+                            setDetailsIssue(issue)
+                            setShowDetailsModal(true)
+                          }}
+                          variant="outline"
+                          className="border-2 font-semibold h-11 rounded-xl gap-2 group transition-all"
+                          style={{ borderColor: '#014b89', color: '#014b89' }}
+                        >
+                          View Details
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Assign Modal */}
+      {showAssignModal && selectedIssue && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl">
+            <h3 className="text-2xl font-bold mb-4" style={{ color: '#014b89' }}>Assign Issue</h3>
+            <p className="text-gray-600 mb-6">Assign &ldquo;{selectedIssue.title}&rdquo; to a caretaker</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-bold text-gray-900 mb-2 block">Caretaker ID *</label>
+                <Input
+                  placeholder="Enter caretaker user ID"
+                  value={assignData.assigned_to}
+                  onChange={(e) => setAssignData({ ...assignData, assigned_to: e.target.value })}
+                  className="border-2 rounded-xl h-12"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-900 mb-2 block">Notes (Optional)</label>
+                <textarea
+                  placeholder="Add assignment notes..."
+                  value={assignData.notes}
+                  onChange={(e) => setAssignData({ ...assignData, notes: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl resize-none"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                onClick={handleAssign}
+                className="flex-1 h-12 rounded-xl text-white font-bold"
+                style={{ background: '#014b89' }}
+                disabled={isSubmitting || !assignData.assigned_to}
+              >
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Assign'}
+              </Button>
+              <Button
+                onClick={() => { setShowAssignModal(false); setSelectedIssue(null); }}
+                variant="outline"
+                className="h-12 rounded-xl font-semibold border-2"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Update Modal */}
+      {showStatusModal && selectedIssue && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl">
+            <h3 className="text-2xl font-bold mb-4" style={{ color: '#014b89' }}>Update Status</h3>
+            <p className="text-gray-600 mb-6">Update status for &ldquo;{selectedIssue.title}&rdquo;</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-bold text-gray-900 mb-2 block">New Status *</label>
+                <select
+                  value={statusData.status}
+                  onChange={(e) => setStatusData({ ...statusData, status: e.target.value })}
+                  className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl bg-white text-gray-900 font-medium"
+                >
+                  <option value="">Select status...</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-900 mb-2 block">Notes (Optional)</label>
+                <textarea
+                  placeholder="Add status update notes..."
+                  value={statusData.notes}
+                  onChange={(e) => setStatusData({ ...statusData, notes: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl resize-none"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                onClick={handleStatusUpdate}
+                className="flex-1 h-12 rounded-xl text-white font-bold"
+                style={{ background: '#f26918' }}
+                disabled={isSubmitting || !statusData.status}
+              >
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Status'}
+              </Button>
+              <Button
+                onClick={() => { setShowStatusModal(false); setSelectedIssue(null); }}
+                variant="outline"
+                className="h-12 rounded-xl font-semibold border-2"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Issue Details Modal */}
+      {showDetailsModal && detailsIssue && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold" style={{ color: '#014b89' }}>Issue Details</h2>
+              <button
+                onClick={() => { setShowDetailsModal(false); setDetailsIssue(null); }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Title */}
+              <div>
+                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Title</label>
+                <h3 className="text-xl font-bold text-gray-900">{detailsIssue.title}</h3>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Description</label>
+                <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-xl border-2 border-gray-100">
+                  {detailsIssue.description}
+                </p>
+              </div>
+
+              {/* Status, Category, Priority */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Status</label>
+                  <span 
+                    className="px-4 py-2 rounded-xl text-sm font-bold border-2 inline-block"
+                    style={{ 
+                      background: getStatusColor(detailsIssue.status).bg, 
+                      color: getStatusColor(detailsIssue.status).text, 
+                      borderColor: getStatusColor(detailsIssue.status).border 
+                    }}
+                  >
+                    {formatStatus(detailsIssue.status)}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Category</label>
+                  <span className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold border-2 border-gray-200 inline-block capitalize">
+                    {detailsIssue.category}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Priority</label>
+                  <span 
+                    className="px-4 py-2 rounded-xl text-sm font-bold border-2 inline-block capitalize"
+                    style={{ 
+                      background: getPriorityColor(detailsIssue.priority).bg, 
+                      color: getPriorityColor(detailsIssue.priority).text, 
+                      borderColor: getPriorityColor(detailsIssue.priority).border 
+                    }}
+                  >
+                    {detailsIssue.priority}
+                  </span>
+                </div>
+              </div>
+
+              {/* Location & Hostel */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {detailsIssue.hostel_name && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Hostel</label>
+                    <p className="text-gray-900 font-semibold">📍 {detailsIssue.hostel_name}</p>
+                  </div>
+                )}
+                {detailsIssue.room_number && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Room</label>
+                    <p className="text-gray-900 font-semibold">{detailsIssue.room_number}</p>
+                  </div>
+                )}
+              </div>
+
+              {detailsIssue.location && (
+                <div>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Location</label>
+                  <p className="text-gray-900 font-medium">{detailsIssue.location}</p>
+                </div>
+              )}
+
+              {/* Assignee */}
+              {detailsIssue.assignee && (
+                <div>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Assigned To</label>
+                  <div className="px-4 py-3 rounded-xl bg-blue-50 border-2 border-blue-100 flex items-center gap-2">
+                    <UserPlus className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-700">{detailsIssue.assignee.full_name}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t-2 border-gray-100">
+                <div>
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Reported On</label>
+                  <p className="text-gray-900 font-medium">
+                    {new Date(detailsIssue.created_at).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                {detailsIssue.resolved_at && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Resolved On</label>
+                    <p className="text-gray-900 font-medium">
+                      {new Date(detailsIssue.resolved_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Note */}
+              <div className="bg-blue-50 border-2 border-blue-100 rounded-xl p-4">
+                <p className="text-sm text-blue-700 font-medium">
+                  💡 Track your issue status here. You'll be notified when it's updated by the caretaker.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <Button
+                onClick={() => { setShowDetailsModal(false); setDetailsIssue(null); }}
+                className="w-full h-12 rounded-xl text-white font-bold"
+                style={{ background: '#014b89' }}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
