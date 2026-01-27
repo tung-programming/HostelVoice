@@ -284,56 +284,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            {/* Demo Data Buttons */}
-            <div className="mt-8 space-y-3">
-              <div className="flex items-center gap-2 justify-center mb-4">
-                <div className="h-px flex-1 bg-gray-200"></div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Quick Demo Logins</p>
-                <div className="h-px flex-1 bg-gray-200"></div>
-              </div>
-              <div className="space-y-3">
-                {DEMO_CREDENTIALS.map((cred) => {
-                  const Icon = cred.icon
-                  return (
-                    <button
-                      key={cred.role}
-                      type="button"
-                      onClick={() => {
-                        setEmail(cred.email)
-                        setPassword(cred.password)
-                        setSelectedRole(cred.role)
-                      }}
-                      className="w-full px-4 py-3 text-left rounded-xl border-2 border-gray-200 bg-white hover:shadow-lg transition-all duration-200 group"
-                      style={{
-                        borderColor: selectedRole === cred.role && email === cred.email ? cred.color : undefined
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ background: `${cred.color}15` }}
-                        >
-                          <Icon className="w-5 h-5" style={{ color: cred.color }} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold text-gray-900">{cred.title}</div>
-                          <div className="text-xs text-gray-600 mt-0.5">{cred.description}</div>
-                        </div>
-                        <Check 
-                          className={`w-5 h-5 flex-shrink-0 transition-all ${
-                            selectedRole === cred.role && email === cred.email 
-                              ? 'opacity-100' 
-                              : 'opacity-0 group-hover:opacity-30'
-                          }`}
-                          style={{ color: cred.color }}
-                        />
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
           </div>
 
           {/* Footer */}
