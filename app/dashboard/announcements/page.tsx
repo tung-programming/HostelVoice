@@ -1,102 +1,137 @@
 'use client'
 
-import React from "react"
-
-import { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { announcementsApi, Announcement, ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Megaphone, X, Plus, Pin } from 'lucide-react'
-
-interface Announcement {
-  id: string
-  title: string
-  content: string
-  author: string
-  category: string
-  createdAt: string
-  isPinned: boolean
-}
+import { Megaphone, X, Plus, Pin, Loader2, RefreshCw, Trash2, Edit2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function AnnouncementsPage() {
   const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
-  const [announcements, setAnnouncements] = useState<Announcement[]>([
-    {
-      id: '1',
-      title: 'Hostel WiFi Maintenance - This Weekend',
-      content: 'The WiFi network will be under maintenance on Saturday and Sunday. We apologize for any inconvenience.',
-      author: 'Admin',
-      category: 'Maintenance',
-      createdAt: '2026-01-24',
-      isPinned: true
-    },
-    {
-      id: '2',
-      title: 'Guest Policy Update',
-      content: 'New guest policy has been implemented. Please review the updated rules in the hostel notice board.',
-      author: 'Caretaker',
-      category: 'Policy',
-      createdAt: '2026-01-23',
-      isPinned: true
-    },
-    {
-      id: '3',
-      title: 'Laundry Services Available',
-      content: 'Complimentary laundry service is now available on Wednesdays and Sundays.',
-      author: 'Admin',
-      category: 'Services',
-      createdAt: '2026-01-22',
-      isPinned: false
-    },
-    {
-      id: '4',
-      title: 'Sports Tournament Registration',
-      content: 'Annual inter-hostel sports tournament registration is now open. Teams of 6 members can participate.',
-      author: 'Admin',
-      category: 'Events',
-      createdAt: '2026-01-21',
-      isPinned: false
-    }
-  ])
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: 'General'
+    category: 'general',
+    priority: 'normal'
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const newAnnouncement: Announcement = {
-      id: String(announcements.length + 1),
-      title: formData.title,
-      content: formData.content,
-      author: user?.name || 'Unknown',
-      category: formData.category,
-      createdAt: new Date().toISOString().split('T')[0],
-      isPinned: false
+  // Fetch announcements
+  const fetchAnnouncements = useCallback(async () => {
+    if (!user) return
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await announcementsApi.getTargeted(1, 50)
+      if (response.data) {
+        setAnnouncements(response.data)
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Failed to load announcements'
+      setError(message)
+      toast.error(message)
+    } finally {
+      setIsLoading(false)
     }
-    setAnnouncements([newAnnouncement, ...announcements])
-    setFormData({ title: '', content: '', category: 'General' })
-    setShowForm(false)
+  }, [user])
+
+  useEffect(() => {
+    fetchAnnouncements()
+  }, [fetchAnnouncements])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+
+    setIsSubmitting(true)
+
+    try {
+      if (editingId) {
+        // Update existing
+        const response = await announcementsApi.update(editingId, {
+          title: formData.title,
+          content: formData.content,
+          category: formData.category,
+          priority: formData.priority,
+        })
+        if (response.data) {
+          setAnnouncements(prev => prev.map(a => a.id === editingId ? response.data! : a))
+          toast.success('Announcement updated!')
+        }
+      } else {
+        // Create new
+        const response = await announcementsApi.create({
+          title: formData.title,
+          content: formData.content,
+          category: formData.category,
+          priority: formData.priority,
+          target_role: 'all',
+        })
+        if (response.data) {
+          setAnnouncements(prev => [response.data!, ...prev])
+          toast.success('Announcement posted!')
+        }
+      }
+      setFormData({ title: '', content: '', category: 'general', priority: 'normal' })
+      setShowForm(false)
+      setEditingId(null)
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Failed to save announcement'
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this announcement?')) return
+
+    try {
+      await announcementsApi.delete(id)
+      setAnnouncements(prev => prev.filter(a => a.id !== id))
+      toast.success('Announcement deleted!')
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Failed to delete'
+      toast.error(message)
+    }
+  }
+
+  const handleEdit = (announcement: Announcement) => {
+    setFormData({
+      title: announcement.title,
+      content: announcement.content,
+      category: announcement.category || 'general',
+      priority: announcement.priority || 'normal',
+    })
+    setEditingId(announcement.id)
+    setShowForm(true)
   }
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, { bg: string, text: string, border: string }> = {
-      Maintenance: { bg: 'rgba(242, 105, 24, 0.1)', text: '#f26918', border: 'rgba(242, 105, 24, 0.3)' },
-      Policy: { bg: 'rgba(1, 75, 137, 0.1)', text: '#014b89', border: 'rgba(1, 75, 137, 0.3)' },
-      Services: { bg: 'rgba(168, 85, 247, 0.1)', text: '#a855f7', border: 'rgba(168, 85, 247, 0.3)' },
-      Events: { bg: 'rgba(6, 182, 212, 0.1)', text: '#06b6d4', border: 'rgba(6, 182, 212, 0.3)' },
-      General: { bg: 'rgba(107, 114, 128, 0.1)', text: '#6b7280', border: 'rgba(107, 114, 128, 0.3)' }
+      maintenance: { bg: 'rgba(242, 105, 24, 0.1)', text: '#f26918', border: 'rgba(242, 105, 24, 0.3)' },
+      policy: { bg: 'rgba(1, 75, 137, 0.1)', text: '#014b89', border: 'rgba(1, 75, 137, 0.3)' },
+      services: { bg: 'rgba(168, 85, 247, 0.1)', text: '#a855f7', border: 'rgba(168, 85, 247, 0.3)' },
+      events: { bg: 'rgba(6, 182, 212, 0.1)', text: '#06b6d4', border: 'rgba(6, 182, 212, 0.3)' },
+      general: { bg: 'rgba(107, 114, 128, 0.1)', text: '#6b7280', border: 'rgba(107, 114, 128, 0.3)' }
     }
-    return colors[category] || colors.General
+    return colors[category?.toLowerCase()] || colors.general
   }
 
   if (!user) return null
 
-  const pinnedAnnouncements = announcements.filter((a) => a.isPinned)
-  const regularAnnouncements = announcements.filter((a) => !a.isPinned)
+  // Split into priority-based groups (high priority = "pinned" equivalent)
+  const pinnedAnnouncements = announcements.filter((a) => a.priority === 'high' || a.is_pinned)
+  const regularAnnouncements = announcements.filter((a) => a.priority !== 'high' && !a.is_pinned)
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
@@ -146,27 +181,39 @@ export default function AnnouncementsPage() {
               Stay updated with the latest hostel announcements and news
             </p>
           </div>
-          {(user.role === 'caretaker' || user.role === 'admin') && (
+          <div className="flex gap-3">
             <Button
-              onClick={() => setShowForm(!showForm)}
-              className="text-white font-bold gap-2 w-full md:w-auto h-12 md:h-14 rounded-xl shadow-lg hover:shadow-xl transition-all text-base"
-              style={{ background: '#f26918' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#d95a0f'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#f26918'}
+              onClick={fetchAnnouncements}
+              variant="outline"
+              className="gap-2 h-12 rounded-xl font-semibold border-2"
+              style={{ borderColor: '#014b89', color: '#014b89' }}
+              disabled={isLoading}
             >
-              <Plus className="w-5 h-5" />
-              Post Announcement
+              <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
-          )}
+            {(user.role === 'caretaker' || user.role === 'admin') && (
+              <Button
+                onClick={() => { setShowForm(!showForm); setEditingId(null); setFormData({ title: '', content: '', category: 'general', priority: 'normal' }); }}
+                className="text-white font-bold gap-2 w-full md:w-auto h-12 md:h-14 rounded-xl shadow-lg hover:shadow-xl transition-all text-base"
+                style={{ background: '#f26918' }}
+              >
+                <Plus className="w-5 h-5" />
+                Post Announcement
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Post Form */}
         {showForm && (user.role === 'caretaker' || user.role === 'admin') && (
           <div className="bg-white border-2 rounded-3xl p-6 md:p-8 mb-8 shadow-xl animate-fade-in" style={{ borderColor: 'rgba(242, 105, 24, 0.2)' }}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold" style={{ color: '#014b89' }}>Create New Announcement</h2>
+              <h2 className="text-2xl md:text-3xl font-bold" style={{ color: '#014b89' }}>
+                {editingId ? 'Edit Announcement' : 'Create New Announcement'}
+              </h2>
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => { setShowForm(false); setEditingId(null); }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-6 h-6 text-gray-600" />
@@ -187,20 +234,33 @@ export default function AnnouncementsPage() {
                 />
               </div>
 
-              {/* Category */}
-              <div>
-                <label className="text-sm font-bold text-gray-900 mb-2 block">Category *</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#f26918] focus:ring-[#f26918] bg-white text-gray-900 font-medium transition-all"
-                >
-                  <option>General</option>
-                  <option>Maintenance</option>
-                  <option>Policy</option>
-                  <option>Services</option>
-                  <option>Events</option>
-                </select>
+              {/* Category and Priority */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm font-bold text-gray-900 mb-2 block">Category *</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#f26918] focus:ring-[#f26918] bg-white text-gray-900 font-medium transition-all"
+                  >
+                    <option value="general">General</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="policy">Policy</option>
+                    <option value="services">Services</option>
+                    <option value="events">Events</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-gray-900 mb-2 block">Priority</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#f26918] focus:ring-[#f26918] bg-white text-gray-900 font-medium transition-all"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="high">High (Pinned)</option>
+                  </select>
+                </div>
               </div>
 
               {/* Content */}
@@ -222,14 +282,13 @@ export default function AnnouncementsPage() {
                   type="submit" 
                   className="text-white font-bold w-full sm:flex-1 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all"
                   style={{ background: '#f26918' }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#d95a0f'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#f26918'}
+                  disabled={isSubmitting}
                 >
-                  Post Announcement
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (editingId ? 'Update Announcement' : 'Post Announcement')}
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={() => { setShowForm(false); setEditingId(null); }}
                   variant="outline"
                   className="border-2 w-full sm:w-auto h-12 rounded-xl font-semibold"
                   style={{ borderColor: '#014b89', color: '#014b89' }}
@@ -241,8 +300,28 @@ export default function AnnouncementsPage() {
           </div>
         )}
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: '#014b89' }} />
+            <p className="text-gray-600 font-medium">Loading announcements...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-8 text-center mb-8">
+            <Megaphone className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-red-700 mb-2">Failed to Load Announcements</h3>
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={fetchAnnouncements} className="bg-red-600 hover:bg-red-700 text-white">
+              Try Again
+            </Button>
+          </div>
+        )}
+
         {/* Pinned Announcements */}
-        {pinnedAnnouncements.length > 0 && (
+        {!isLoading && !error && pinnedAnnouncements.length > 0 && (
           <div className="mb-8 md:mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-3" style={{ color: '#014b89' }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center animate-pulse-slow" style={{ background: 'rgba(242, 105, 24, 0.15)' }}>
@@ -278,7 +357,7 @@ export default function AnnouncementsPage() {
                     {/* Metadata */}
                     <div className="flex flex-wrap gap-2 pt-4 border-t-2 border-gray-100">
                       <span 
-                        className="px-4 py-2 rounded-xl text-sm font-bold border-2"
+                        className="px-4 py-2 rounded-xl text-sm font-bold border-2 capitalize"
                         style={{ 
                           background: categoryColor.bg, 
                           color: categoryColor.text,
@@ -287,12 +366,32 @@ export default function AnnouncementsPage() {
                       >
                         {announcement.category}
                       </span>
+                      {announcement.creator && (
+                        <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
+                          👤 {announcement.creator.full_name || 'Staff'}
+                        </span>
+                      )}
                       <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
-                        👤 {announcement.author}
+                        📅 {new Date(announcement.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                       </span>
-                      <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
-                        📅 {new Date(announcement.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                      </span>
+                      {(user.role === 'caretaker' || user.role === 'admin') && (
+                        <div className="flex gap-2 ml-auto">
+                          <button
+                            onClick={() => handleEdit(announcement)}
+                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4 text-blue-600" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(announcement.id)}
+                            className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -302,6 +401,7 @@ export default function AnnouncementsPage() {
         )}
 
         {/* Regular Announcements */}
+        {!isLoading && !error && (
         <div>
           <h2 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: '#014b89' }}>Recent Announcements</h2>
           <div className="space-y-4">
@@ -337,7 +437,7 @@ export default function AnnouncementsPage() {
                     {/* Metadata */}
                     <div className="flex flex-wrap gap-2 pt-4 border-t-2 border-gray-100">
                       <span 
-                        className="px-4 py-2 rounded-xl text-sm font-bold border-2"
+                        className="px-4 py-2 rounded-xl text-sm font-bold border-2 capitalize"
                         style={{ 
                           background: categoryColor.bg, 
                           color: categoryColor.text,
@@ -346,12 +446,32 @@ export default function AnnouncementsPage() {
                       >
                         {announcement.category}
                       </span>
+                      {announcement.creator && (
+                        <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
+                          👤 {announcement.creator.full_name || 'Staff'}
+                        </span>
+                      )}
                       <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
-                        👤 {announcement.author}
+                        📅 {new Date(announcement.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                       </span>
-                      <span className="px-4 py-2 rounded-xl text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200">
-                        📅 {new Date(announcement.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                      </span>
+                      {(user.role === 'caretaker' || user.role === 'admin') && (
+                        <div className="flex gap-2 ml-auto">
+                          <button
+                            onClick={() => handleEdit(announcement)}
+                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4 text-blue-600" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(announcement.id)}
+                            className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -359,6 +479,7 @@ export default function AnnouncementsPage() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   )
