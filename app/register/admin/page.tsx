@@ -30,7 +30,8 @@ export default function AdminRegisterPage() {
     position: 'Hostel Administrator',
     department: 'Administration',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    secretCode: ''
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -41,6 +42,14 @@ export default function AdminRegisterPage() {
   }
 
   const validateForm = () => {
+    if (!formData.secretCode.trim()) {
+      setError('Admin registration code is required')
+      return false
+    }
+    if (formData.secretCode !== process.env.NEXT_PUBLIC_ADMIN_SECRET_CODE) {
+      setError('Invalid admin registration code. Please contact the administrator.')
+      return false
+    }
     if (!formData.fullName.trim()) {
       setError('Full name is required')
       return false
@@ -267,6 +276,26 @@ export default function AdminRegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Admin Secret Code */}
+              <div className="p-6 rounded-2xl border-2 mb-6" style={{ borderColor: '#f26918', background: 'rgba(242, 105, 24, 0.05)' }}>
+                <div className="flex items-start gap-3 mb-4">
+                  <Shield className="w-5 h-5 mt-0.5" style={{ color: '#f26918' }} />
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-1">Admin Registration Code *</label>
+                    <p className="text-xs text-gray-600 mb-3">Enter the secret code provided by the administrator</p>
+                  </div>
+                </div>
+                <Input
+                  type="password"
+                  name="secretCode"
+                  placeholder="Enter admin secret code"
+                  value={formData.secretCode}
+                  onChange={handleChange}
+                  className="w-full border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12 transition-all"
+                  autoComplete="off"
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Full Name */}
                 <div>
