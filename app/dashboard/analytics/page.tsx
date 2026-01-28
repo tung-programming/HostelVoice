@@ -6,6 +6,11 @@ import { analyticsApi, ApiError, DashboardStats } from '@/lib/api'
 import { TrendingUp, TrendingDown, Users, AlertCircle, CheckCircle, Clock, Loader2, RefreshCw, Bell, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { 
+  PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, 
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  Area, AreaChart
+} from 'recharts'
 
 export default function AnalyticsPage() {
   const { user } = useAuth()
@@ -198,60 +203,168 @@ export default function AnalyticsPage() {
 
         {/* Charts Section - Mobile Optimized */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8 md:mb-12">
-          {/* Issues Overview */}
+          {/* Issues Overview - Pie Chart */}
           <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-lg">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8" style={{ color: '#014b89' }}>
-              Issues Overview
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6" style={{ color: '#014b89' }}>
+              Issues Status Distribution
             </h2>
-            <div className="space-y-3 sm:space-y-4">
-              {[
-                { label: 'Resolved', count: resolvedIssues, color: '#10b981' },
-                { label: 'Pending', count: pendingIssues, color: '#f26918' },
-                { label: 'This Month', count: dashboardData.issues?.this_month || 0, color: '#014b89' },
-                { label: 'Last Month', count: dashboardData.issues?.last_month || 0, color: '#6b7280' }
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl border-2 border-gray-100 hover:shadow-md transition-all"
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Resolved', value: resolvedIssues, color: '#10b981' },
+                    { name: 'Pending', value: pendingIssues, color: '#f26918' }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
                 >
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div 
-                      className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0"
-                      style={{ background: item.color }}
-                    />
-                    <span className="font-bold text-sm sm:text-base text-gray-900">{item.label}</span>
-                  </div>
-                  <span 
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold"
-                    style={{ color: item.color }}
-                  >
-                    {item.count}
-                  </span>
-                </div>
-              ))}
+                  {[
+                    { name: 'Resolved', value: resolvedIssues, color: '#10b981' },
+                    { name: 'Pending', value: pendingIssues, color: '#f26918' }
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="text-center p-3 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                <p className="text-xs font-semibold text-gray-600 mb-1">Resolved</p>
+                <p className="text-2xl font-bold" style={{ color: '#10b981' }}>{resolvedIssues}</p>
+              </div>
+              <div className="text-center p-3 rounded-lg" style={{ background: 'rgba(242, 105, 24, 0.1)' }}>
+                <p className="text-xs font-semibold text-gray-600 mb-1">Pending</p>
+                <p className="text-2xl font-bold" style={{ color: '#f26918' }}>{pendingIssues}</p>
+              </div>
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {/* Monthly Comparison - Bar Chart */}
           <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-lg">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8" style={{ color: '#014b89' }}>
-              Quick Stats
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6" style={{ color: '#014b89' }}>
+              Monthly Issues Comparison
             </h2>
-            <div className="space-y-3 sm:space-y-4">
-              {summaryStats.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl border-2 border-gray-100 hover:shadow-md transition-all"
-                >
-                  <span className="font-bold text-sm sm:text-base text-gray-900">{item.label}</span>
-                  <span 
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold"
-                    style={{ color: item.color }}
-                  >
-                    {item.value}
-                  </span>
-                </div>
-              ))}
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={[
+                  { month: 'Last Month', issues: dashboardData.issues?.last_month || 0 },
+                  { month: 'This Month', issues: dashboardData.issues?.this_month || 0 }
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                />
+                <Bar dataKey="issues" fill="#014b89" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-4 flex items-center justify-center gap-2 text-sm">
+              <TrendingUp className="w-4 h-4" style={{ color: issuesTrend >= 0 ? '#10b981' : '#ef4444' }} />
+              <span className="font-bold" style={{ color: issuesTrend >= 0 ? '#10b981' : '#ef4444' }}>
+                {issuesTrend >= 0 ? '+' : ''}{issuesTrend}% vs last month
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Stats - Area Chart & Bar Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8 md:mb-12">
+          {/* Quick Stats Bar Chart */}
+          <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-lg">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6" style={{ color: '#014b89' }}>
+              System Statistics
+            </h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={[
+                  { name: 'Pending Issues', value: pendingIssues, color: '#f26918' },
+                  { name: 'Pending Approvals', value: pendingApprovals, color: '#a855f7' },
+                  { name: 'Lost & Found', value: openLostFound, color: '#06b6d4' },
+                  { name: 'Announcements', value: activeAnnouncements, color: '#10b981' }
+                ]}
+                layout="vertical"
+                margin={{ left: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis type="number" stroke="#6b7280" />
+                <YAxis dataKey="name" type="category" width={120} stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                />
+                <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+                  {[
+                    { name: 'Pending Issues', value: pendingIssues, color: '#f26918' },
+                    { name: 'Pending Approvals', value: pendingApprovals, color: '#a855f7' },
+                    { name: 'Lost & Found', value: openLostFound, color: '#06b6d4' },
+                    { name: 'Announcements', value: activeAnnouncements, color: '#10b981' }
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Resolution Rate Chart */}
+          <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-lg">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6" style={{ color: '#014b89' }}>
+              Performance Metrics
+            </h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart
+                data={[
+                  { name: 'Total Issues', value: totalIssues },
+                  { name: 'Resolved', value: resolvedIssues },
+                  { name: 'Active Users', value: totalUsers },
+                  { name: 'Announcements', value: activeAnnouncements }
+                ]}
+              >
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#014b89" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#014b89" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                />
+                <Area type="monotone" dataKey="value" stroke="#014b89" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+              </AreaChart>
+            </ResponsiveContainer>
+            <div className="mt-4 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                <CheckCircle className="w-5 h-5" style={{ color: '#10b981' }} />
+                <span className="font-bold text-lg" style={{ color: '#10b981' }}>
+                  {resolutionRate}% Resolution Rate
+                </span>
+              </div>
             </div>
           </div>
         </div>
