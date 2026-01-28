@@ -28,7 +28,6 @@ export default function CaretakerRegisterPage() {
     phoneNumber: '',
     hostel: 'Block A',
     department: 'Maintenance',
-    experience: '',
     password: '',
     confirmPassword: ''
   })
@@ -55,10 +54,6 @@ export default function CaretakerRegisterPage() {
     }
     if (!formData.phoneNumber.trim()) {
       setError('Phone number is required')
-      return false
-    }
-    if (!formData.experience.trim()) {
-      setError('Years of experience is required')
       return false
     }
     if (formData.password.length < 6) {
@@ -105,7 +100,6 @@ export default function CaretakerRegisterPage() {
         hostel: formData.hostel,
         caretakerId: formData.caretakerId,
         department: formData.department,
-        experience: formData.experience,
       })
       
       toast({
@@ -350,20 +344,6 @@ export default function CaretakerRegisterPage() {
                     <option value="Security">Security</option>
                     <option value="Management">Management</option>
                   </select>
-                </div>
-
-                {/* Experience */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-2">Years of Experience *</label>
-                  <Input
-                    type="number"
-                    name="experience"
-                    placeholder="5"
-                    min="0"
-                    value={formData.experience}
-                    onChange={handleChange}
-                    className="w-full border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12 transition-all"
-                  />
                 </div>
 
                 {/* Password */}
