@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -56,7 +56,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Root endpoint
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: 'HostelVoice API',
@@ -69,7 +69,7 @@ app.get('/', (req, res) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: 'HostelVoice API is running',
@@ -79,7 +79,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Documentation endpoint
-app.get('/docs', (req, res) => {
+app.get('/docs', (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: 'HostelVoice Backend API Documentation',
