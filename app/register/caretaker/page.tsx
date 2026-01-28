@@ -154,16 +154,16 @@ export default function CaretakerRegisterPage() {
           }}
         />
 
-        <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-md w-full text-center space-y-6 relative z-10 border-2 animate-scale-in" style={{ borderColor: 'rgba(242, 105, 24, 0.2)' }}>
-          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto" style={{ background: 'rgba(242, 105, 24, 0.1)' }}>
-            <Clock className="w-10 h-10" style={{ color: '#f26918' }} />
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 max-w-md w-full text-center space-y-4 sm:space-y-6 relative z-10 border-2 animate-scale-in" style={{ borderColor: 'rgba(1, 75, 137, 0.1)' }}>
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto" style={{ background: 'rgba(1, 75, 137, 0.1)' }}>
+            <Clock className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: '#014b89' }} />
           </div>
-          <h2 className="text-3xl font-bold" style={{ color: '#014b89' }}>Registration Submitted!</h2>
-          <p className="text-gray-600 text-lg">Your caretaker account is pending admin approval. You'll receive a notification once your account is approved. Please check back later to login.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: '#014b89' }}>Registration Submitted!</h2>
+          <p className="text-gray-600 text-base sm:text-lg leading-relaxed">Your caretaker account is pending admin approval. You'll receive a notification once your account is approved. Please check back later to login.</p>
           <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#f26918' }}></div>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#014b89' }}></div>
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#014b89', animationDelay: '0.2s' }}></div>
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#f26918', animationDelay: '0.4s' }}></div>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#014b89', animationDelay: '0.4s' }}></div>
           </div>
         </div>
       </div>
@@ -198,70 +198,70 @@ export default function CaretakerRegisterPage() {
           backgroundImage: `
             linear-gradient(to right, rgba(1, 75, 137, 0.08) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(1, 75, 137, 0.08) 1px, transparent 1px),
-            radial-gradient(circle 800px at 50% 0%, rgba(242, 105, 24, 0.05), transparent)
+            radial-gradient(circle 800px at 50% 0%, rgba(1, 75, 137, 0.05), transparent)
           `,
           backgroundSize: "80px 80px, 80px 80px, 100% 100%",
         }}
       />
 
       {/* Floating Orbs */}
-      <div className="absolute top-20 right-10 w-64 h-64 rounded-full opacity-10 blur-3xl animate-float" style={{ background: '#f26918' }}></div>
+      <div className="absolute top-20 right-10 w-64 h-64 rounded-full opacity-10 blur-3xl animate-float" style={{ background: '#014b89' }}></div>
       <div className="absolute bottom-20 left-10 w-80 h-80 rounded-full opacity-10 blur-3xl animate-float" style={{ background: '#014b89', animationDelay: '2s' }}></div>
 
-      {/* Navigation */}
+      {/* Navigation - Mobile Optimized */}
       <nav className="relative z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <Image 
               src="/logo/logo.png" 
               alt="HostelVoice Logo" 
               width={2000} 
               height={70} 
-              className="h-14 w-auto"
+              className="h-12 sm:h-14 w-auto"
               priority
             />
           </Link>
           <Link href="/login">
-            <Button variant="outline" className="border-2 hover:text-white font-semibold transition-all" style={{ borderColor: '#f26918', color: '#f26918' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f26918'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+            <Button variant="outline" className="border-2 hover:text-white font-semibold transition-all text-sm sm:text-base px-3 sm:px-4" style={{ borderColor: '#014b89', color: '#014b89' }} onMouseEnter={(e) => e.currentTarget.style.background = '#014b89'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
               Sign In
             </Button>
           </Link>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center p-4 py-12">
+      {/* Main Content - Mobile Optimized */}
+      <div className="relative z-10 flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8 md:py-12">
         <div className="w-full max-w-3xl">
-          {/* Back Button */}
-          <Link href="/register" className="inline-flex items-center gap-2 mb-6 text-gray-600 hover:text-gray-900 transition-colors animate-slide-up">
-            <ArrowLeft className="w-5 h-5" />
+          {/* Back Button - Mobile Optimized */}
+          <Link href="/register" className="inline-flex items-center gap-2 mb-4 sm:mb-6 text-gray-600 hover:text-gray-900 transition-colors animate-slide-up text-sm sm:text-base">
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="font-medium">Back to role selection</span>
           </Link>
 
-          {/* Form Container */}
-          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border-2 animate-slide-up" style={{ borderColor: 'rgba(242, 105, 24, 0.2)', animationDelay: '0.1s' }}>
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: '#f26918' }}>
-                  <UserCheck className="w-7 h-7 text-white" />
+          {/* Form Container - Mobile Optimized */}
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 border-2 animate-slide-up" style={{ borderColor: 'rgba(1, 75, 137, 0.1)', animationDelay: '0.1s' }}>
+            {/* Header - Mobile Optimized */}
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0" style={{ background: '#014b89' }}>
+                  <UserCheck className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold" style={{ color: '#014b89' }}>Caretaker Registration</h1>
-                  <p className="text-gray-600">Register as a caretaker to manage hostel operations</p>
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#014b89' }}>Caretaker Registration</h1>
+                  <p className="text-sm sm:text-base text-gray-600 mt-1">Register as a caretaker to manage hostel operations</p>
                 </div>
               </div>
             </div>
 
             {error && (
-              <div className="mb-6 p-4 rounded-xl border-2 flex items-start gap-3 animate-slide-up" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border-2 flex items-start gap-2 sm:gap-3 animate-slide-up" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-red-700 font-medium">{error}</span>
+                <span className="text-xs sm:text-sm text-red-700 font-medium">{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* Full Name */}
                 <div>
                   <label className="block text-sm font-bold text-gray-900 mb-2">Full Name *</label>
@@ -271,7 +271,7 @@ export default function CaretakerRegisterPage() {
                     placeholder="Rajesh Kumar"
                     value={formData.fullName}
                     onChange={handleChange}
-                    className="w-full border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12 transition-all"
+                    className="w-full border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-11 sm:h-12 transition-all text-sm sm:text-base"
                   />
                 </div>
 
@@ -284,7 +284,7 @@ export default function CaretakerRegisterPage() {
                     placeholder="rajesh@hostel.com"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12 transition-all"
+                    className="w-full border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-11 sm:h-12 transition-all text-sm sm:text-base"
                   />
                 </div>
 
@@ -297,7 +297,7 @@ export default function CaretakerRegisterPage() {
                     placeholder="CTK2025001"
                     value={formData.caretakerId}
                     onChange={handleChange}
-                    className="w-full border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12 transition-all"
+                    className="w-full border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-11 sm:h-12 transition-all text-sm sm:text-base"
                   />
                 </div>
 
@@ -310,7 +310,7 @@ export default function CaretakerRegisterPage() {
                     placeholder="+91 9876543210"
                     value={formData.phoneNumber}
                     onChange={handleChange}
-                    className="w-full border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12 transition-all"
+                    className="w-full border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-11 sm:h-12 transition-all text-sm sm:text-base"
                   />
                 </div>
 
@@ -321,7 +321,7 @@ export default function CaretakerRegisterPage() {
                     name="hostel"
                     value={formData.hostel}
                     onChange={handleChange}
-                    className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#f26918] focus:ring-[#f26918] bg-white text-gray-900 font-medium transition-all"
+                    className="w-full h-11 sm:h-12 px-3 sm:px-4 border-2 border-gray-200 rounded-xl focus:border-[#014b89] focus:ring-[#014b89] bg-white text-gray-900 font-medium transition-all text-sm sm:text-base"
                   >
                     <option value="Block A">Block A</option>
                     <option value="Block B">Block B</option>
@@ -337,7 +337,7 @@ export default function CaretakerRegisterPage() {
                     name="department"
                     value={formData.department}
                     onChange={handleChange}
-                    className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-[#f26918] focus:ring-[#f26918] bg-white text-gray-900 font-medium transition-all"
+                    className="w-full h-11 sm:h-12 px-3 sm:px-4 border-2 border-gray-200 rounded-xl focus:border-[#014b89] focus:ring-[#014b89] bg-white text-gray-900 font-medium transition-all text-sm sm:text-base"
                   >
                     <option value="Maintenance">Maintenance</option>
                     <option value="Housekeeping">Housekeeping</option>
@@ -356,12 +356,12 @@ export default function CaretakerRegisterPage() {
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={handleChange}
-                      className="w-full border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12 pr-12 transition-all"
+                      className="w-full border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-11 sm:h-12 pr-12 transition-all text-sm sm:text-base"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -378,12 +378,12 @@ export default function CaretakerRegisterPage() {
                       placeholder="••••••••"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className="w-full border-2 border-gray-200 focus:border-[#f26918] focus:ring-[#f26918] rounded-xl h-12 pr-12 transition-all"
+                      className="w-full border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-11 sm:h-12 pr-12 transition-all text-sm sm:text-base"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -391,33 +391,33 @@ export default function CaretakerRegisterPage() {
                 </div>
               </div>
 
-              {/* Terms Agreement */}
-              <div className="flex items-start gap-3 pt-4 p-4 rounded-xl" style={{ background: 'rgba(242, 105, 24, 0.05)' }}>
+              {/* Terms Agreement - Mobile Optimized */}
+              <div className="flex items-start gap-2 sm:gap-3 pt-2 sm:pt-4 p-3 sm:p-4 rounded-xl" style={{ background: 'rgba(1, 75, 137, 0.03)' }}>
                 <input
                   type="checkbox"
                   id="terms"
                   checked={agreeTerms}
                   onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 cursor-pointer mt-0.5"
-                  style={{ accentColor: '#f26918' }}
+                  className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 cursor-pointer mt-0.5 flex-shrink-0"
+                  style={{ accentColor: '#014b89' }}
                 />
-                <label htmlFor="terms" className="text-sm text-gray-700 leading-relaxed">
-                  I agree to the <a href="#" className="font-semibold hover:underline" style={{ color: '#f26918' }}>Terms of Service</a> and <a href="#" className="font-semibold hover:underline" style={{ color: '#f26918' }}>Privacy Policy</a>
+                <label htmlFor="terms" className="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                  I agree to the <a href="#" className="font-semibold hover:underline" style={{ color: '#014b89' }}>Terms of Service</a> and <a href="#" className="font-semibold hover:underline" style={{ color: '#014b89' }}>Privacy Policy</a>
                 </label>
               </div>
 
-              {/* Submit Button */}
+              {/* Submit Button - Mobile Optimized */}
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full text-white font-bold py-4 rounded-xl transition-all duration-200 disabled:opacity-50 text-base shadow-lg hover:shadow-xl"
-                style={{ background: '#f26918' }}
-                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#d15510')}
-                onMouseLeave={(e) => !isLoading && (e.currentTarget.style.background = '#f26918')}
+                className="w-full text-white font-bold py-3 sm:py-4 rounded-xl transition-all duration-200 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"
+                style={{ background: '#014b89' }}
+                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#012d52')}
+                onMouseLeave={(e) => !isLoading && (e.currentTarget.style.background = '#014b89')}
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Creating Account...
                   </span>
                 ) : (
@@ -425,9 +425,9 @@ export default function CaretakerRegisterPage() {
                 )}
               </Button>
 
-              {/* Login Link */}
-              <p className="text-center text-gray-600 pt-2">
-                Already have an account? <Link href="/login" className="font-semibold hover:underline" style={{ color: '#f26918' }}>Sign In</Link>
+              {/* Login Link - Mobile Optimized */}
+              <p className="text-center text-gray-600 pt-2 text-sm sm:text-base">
+                Already have an account? <Link href="/login" className="font-semibold hover:underline" style={{ color: '#014b89' }}>Sign In</Link>
               </p>
             </form>
           </div>
@@ -435,7 +435,7 @@ export default function CaretakerRegisterPage() {
       </div>
 
       {/* Bottom Wave */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 z-0" style={{ background: '#f26918' }}></div>
+      <div className="absolute bottom-0 left-0 right-0 h-2 z-0" style={{ background: '#014b89' }}></div>
     </div>
   )
 }
