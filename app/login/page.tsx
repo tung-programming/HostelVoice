@@ -154,60 +154,60 @@ export default function LoginPage() {
       <div className="absolute top-20 right-10 w-64 h-64 rounded-full opacity-10 blur-3xl animate-float" style={{ background: '#014b89' }}></div>
       <div className="absolute bottom-20 left-10 w-80 h-80 rounded-full opacity-10 blur-3xl animate-float" style={{ background: '#f26918', animationDelay: '2s' }}></div>
 
-      {/* Navigation */}
+      {/* Navigation - Mobile Optimized */}
       <nav className="relative z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <Image 
               src="/logo/logo.png" 
               alt="HostelVoice Logo" 
               width={2000} 
               height={70} 
-              className="h-14 w-auto"
+              className="h-12 sm:h-14 w-auto"
               priority
             />
           </Link>
           <Link href="/register">
-            <Button variant="outline" className="border-2 hover:text-white font-semibold transition-all" style={{ borderColor: '#014b89', color: '#014b89' }} onMouseEnter={(e) => e.currentTarget.style.background = '#014b89'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+            <Button variant="outline" className="border-2 hover:text-white font-semibold transition-all text-sm sm:text-base px-3 sm:px-4" style={{ borderColor: '#014b89', color: '#014b89' }} onMouseEnter={(e) => e.currentTarget.style.background = '#014b89'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
               Register
             </Button>
           </Link>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center px-4 py-12 md:py-16">
+      {/* Main Content - Mobile Optimized */}
+      <div className="relative z-10 flex items-center justify-center px-4 py-8 sm:py-12 md:py-16">
         <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-4xl md:text-5xl font-bold mb-3" style={{ color: '#014b89' }}>
+          {/* Header - Mobile Optimized */}
+          <div className="text-center mb-6 sm:mb-8 animate-fade-in">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3" style={{ color: '#014b89' }}>
               Welcome Back
             </h1>
-            <p className="text-lg text-gray-600">Sign in to your hostel account</p>
+            <p className="text-base sm:text-lg text-gray-600">Sign in to your hostel account</p>
           </div>
 
-          {/* Main Card */}
-          <div className="bg-white rounded-3xl border-2 shadow-2xl px-6 py-8 md:p-10 mb-6 animate-scale-in" style={{ borderColor: 'rgba(1, 75, 137, 0.1)' }}>
-            {/* Error Message */}
+          {/* Main Card - Mobile Optimized */}
+          <div className="bg-white rounded-2xl sm:rounded-3xl border-2 shadow-2xl px-5 py-6 sm:px-6 sm:py-8 md:p-10 mb-4 sm:mb-6 animate-scale-in" style={{ borderColor: 'rgba(1, 75, 137, 0.1)' }}>
+            {/* Error Message - Mobile Optimized */}
             {error && (
-              <div className="mb-6 p-4 rounded-xl border-2 flex items-start gap-3 animate-shake" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border-2 flex items-start gap-2 sm:gap-3 animate-shake" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-red-700 text-sm font-medium">{error}</p>
+                <p className="text-red-700 text-xs sm:text-sm font-medium">{error}</p>
               </div>
             )}
 
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-5 mb-8">
+            {/* Login Form - Mobile Optimized */}
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 mb-6 sm:mb-8">
               <div>
                 <label className="block text-sm font-bold text-gray-900 mb-2">Email Address *</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <Input
                     type="email"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-12 border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-12 transition-all"
+                    className="pl-10 sm:pl-12 border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-11 sm:h-12 transition-all text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -216,21 +216,22 @@ export default function LoginPage() {
               <div>
                 <label className="block text-sm font-bold text-gray-900 mb-2">Password *</label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <Input
                     type="password"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-12 border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-12 transition-all"
+                    className="pl-10 sm:pl-12 border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl h-11 sm:h-12 transition-all text-sm sm:text-base"
                     required
                   />
                 </div>
               </div>
 
+              {/* Role Selection - Mobile Optimized */}
               <div>
-                <label className="block text-sm font-bold text-gray-900 mb-3">Select Your Role *</label>
-                <div className="grid grid-cols-3 gap-3">
+                <label className="block text-sm font-bold text-gray-900 mb-2 sm:mb-3">Select Your Role *</label>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {DEMO_CREDENTIALS.map((cred) => {
                     const Icon = cred.icon
                     return (
@@ -238,7 +239,7 @@ export default function LoginPage() {
                         key={cred.role}
                         type="button"
                         onClick={() => setSelectedRole(cred.role)}
-                        className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                        className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all duration-200 ${
                           selectedRole === cred.role
                             ? 'shadow-lg'
                             : 'border-gray-200 hover:border-gray-300'
@@ -248,14 +249,14 @@ export default function LoginPage() {
                           background: selectedRole === cred.role ? `${cred.color}08` : undefined
                         }}
                       >
-                        <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-col items-center gap-1.5 sm:gap-2">
                           <div 
-                            className="w-10 h-10 rounded-lg flex items-center justify-center"
+                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center"
                             style={{ background: selectedRole === cred.role ? cred.color : 'rgba(0,0,0,0.05)' }}
                           >
-                            <Icon className="w-5 h-5" style={{ color: selectedRole === cred.role ? 'white' : '#666' }} />
+                            <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: selectedRole === cred.role ? 'white' : '#666' }} />
                           </div>
-                          <div className="text-xs font-bold text-gray-900 text-center leading-tight">{cred.title}</div>
+                          <div className="text-[10px] sm:text-xs font-bold text-gray-900 text-center leading-tight">{cred.title}</div>
                         </div>
                       </button>
                     )
@@ -263,38 +264,39 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              {/* Submit Button - Mobile Optimized */}
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-6 text-white font-bold py-4 rounded-xl transition-all duration-200 disabled:opacity-50 text-base shadow-lg hover:shadow-xl"
+                className="w-full mt-4 sm:mt-6 text-white font-bold py-3 sm:py-4 rounded-xl transition-all duration-200 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"
                 style={{ background: '#014b89' }}
                 onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = '#012d52')}
                 onMouseLeave={(e) => !isLoading && (e.currentTarget.style.background = '#014b89')}
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                     Signing in...
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     Sign In
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </span>
                 )}
               </Button>
             </form>
           </div>
 
-          {/* Footer */}
-          <div className="text-center space-y-3">
-            <p className="text-sm text-gray-600">
+          {/* Footer - Mobile Optimized */}
+          <div className="text-center space-y-2 sm:space-y-3">
+            <p className="text-xs sm:text-sm text-gray-600">
               Don't have an account?{' '}
               <Link href="/register" className="font-semibold hover:underline transition-colors" style={{ color: '#014b89' }}>
                 Register Now
               </Link>
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600">
               <Link href="/" className="font-semibold hover:underline transition-colors" style={{ color: '#f26918' }}>
                 ← Back to Home
               </Link>
