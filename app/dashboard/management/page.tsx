@@ -47,7 +47,10 @@ export default function ManagementPage() {
         analyticsApi.getDashboard()
       ])
 
-      const hostelData = hostelsRes.data || []
+      const hostelData = (hostelsRes.data || []).map((h: any) => ({
+        name: h.name,
+        student_count: h.studentCount || 0
+      }))
       setHostels(hostelData)
 
       const caretakerData = (caretakersRes.data || []) as unknown as Caretaker[]
@@ -60,9 +63,9 @@ export default function ManagementPage() {
 
       setStats({
         totalHostels,
-        totalCapacity: totalStudents + Math.round(totalStudents * 0.1), // Estimate capacity as current + 10%
+        totalCapacity: totalStudents + Math.round(totalStudents * 0.1),
         currentOccupancy: totalStudents,
-        occupancyRate: totalStudents > 0 ? 90 : 0 // Placeholder
+        occupancyRate: totalStudents > 0 ? 90 : 0
       })
 
     } catch (err: any) {
@@ -82,15 +85,15 @@ export default function ManagementPage() {
 
   if (user.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-8">
-        <div className="max-w-md w-full rounded-3xl p-8 border-2 shadow-xl" style={{ borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.05)' }}>
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(239, 68, 68, 0.15)' }}>
-              <AlertCircle className="w-6 h-6" style={{ color: '#ef4444' }} />
+      <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-8">
+        <div className="max-w-md w-full rounded-2xl sm:rounded-3xl p-6 sm:p-8 border-2 shadow-xl" style={{ borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.05)' }}>
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(239, 68, 68, 0.15)' }}>
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#ef4444' }} />
             </div>
             <div>
-              <h3 className="font-bold text-xl text-gray-900 mb-2">Access Denied</h3>
-              <p className="text-gray-700 leading-relaxed">Only administrators can access system management.</p>
+              <h3 className="font-bold text-lg sm:text-xl text-gray-900 mb-2">Access Denied</h3>
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">Only administrators can access system management.</p>
             </div>
           </div>
         </div>
@@ -128,21 +131,21 @@ export default function ManagementPage() {
         }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 pt-6 pb-24 md:px-8 md:pt-12 md:pb-12 relative z-10">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 md:mb-12 animate-fade-in">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 md:pt-12 pb-12 sm:pb-16 md:pb-24 relative z-10">
+        {/* Header - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-12 animate-fade-in">
           <div>
-            <h1 className="text-3xl md:text-5xl font-bold mb-2" style={{ color: '#014b89' }}>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-1 sm:mb-2" style={{ color: '#014b89' }}>
               System Management
             </h1>
-            <p className="text-base md:text-lg text-gray-600">Manage hostels, caretakers, and system settings</p>
+            <p className="text-sm sm:text-base md:text-lg text-gray-600">Manage hostels, caretakers, and system settings</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Button
               variant="outline"
               onClick={fetchData}
               disabled={loading}
-              className="gap-2"
+              className="gap-2 h-10 sm:h-11 text-sm sm:text-base"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -150,23 +153,23 @@ export default function ManagementPage() {
           </div>
         </div>
 
-        {/* Error State */}
+        {/* Error State - Mobile Optimized */}
         {error && (
-          <div className="mb-8 p-4 rounded-xl border-2 border-red-200 bg-red-50 text-red-700">
-            <p className="font-medium">{error}</p>
-            <button onClick={fetchData} className="text-sm underline mt-2">Try again</button>
+          <div className="mb-6 sm:mb-8 p-4 rounded-lg sm:rounded-xl border-2 border-red-200 bg-red-50 text-red-700">
+            <p className="font-medium text-sm sm:text-base">{error}</p>
+            <button onClick={fetchData} className="text-xs sm:text-sm underline mt-2">Try again</button>
           </div>
         )}
 
         {/* Loading State */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-10 h-10 animate-spin" style={{ color: '#014b89' }} />
+          <div className="flex items-center justify-center py-12 sm:py-16 md:py-20">
+            <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin" style={{ color: '#014b89' }} />
           </div>
         ) : (
           <>
-            {/* Overall Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+            {/* Overall Stats - Mobile Optimized */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8 md:mb-12">
               {[
                 { label: 'Total Hostels', value: stats.totalHostels, color: '#014b89' },
                 { label: 'Total Students', value: stats.currentOccupancy, color: '#f26918' },
@@ -175,139 +178,207 @@ export default function ManagementPage() {
               ].map((stat, i) => (
                 <div 
                   key={stat.label} 
-                  className="bg-white border-2 border-gray-100 rounded-2xl p-5 md:p-6 hover:shadow-xl transition-all animate-fade-in"
+                  className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 hover:shadow-xl transition-all animate-fade-in"
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >
-                  <p className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">{stat.label}</p>
-                  <p className="text-3xl md:text-4xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
                 </div>
               ))}
             </div>
 
-            {/* Hostels Management */}
-            <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 md:p-8 shadow-lg mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-              <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 flex items-center gap-3" style={{ color: '#014b89' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(1, 75, 137, 0.1)' }}>
-                  <Building2 className="w-5 h-5" style={{ color: '#014b89' }} />
+            {/* Hostels Management - Mobile Optimized */}
+            <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 flex items-center gap-2 sm:gap-3" style={{ color: '#014b89' }}>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center" style={{ background: 'rgba(1, 75, 137, 0.1)' }}>
+                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#014b89' }} />
                 </div>
-                Hostels ({hostels.length})
+                <span className="text-base sm:text-xl md:text-2xl lg:text-3xl">Hostels ({hostels.length})</span>
               </h2>
               {hostels.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No hostels found</p>
+                <p className="text-center text-gray-500 py-6 sm:py-8 text-sm sm:text-base">No hostels found</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b-2 border-gray-200">
-                        <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Hostel Name</th>
-                        <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Students</th>
-                        <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {hostels.map((hostel, idx) => (
-                        <tr key={hostel.name} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-4 font-bold text-gray-900">{hostel.name}</td>
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-24 h-3 rounded-full bg-gray-100 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all duration-500"
-                                  style={{ 
-                                    width: `${Math.min(100, (hostel.student_count / Math.max(...hostels.map(h => h.student_count))) * 100)}%`,
-                                    background: 'linear-gradient(to right, #014b89, #0369a1)'
-                                  }}
-                                />
-                              </div>
-                              <span className="text-sm font-bold text-gray-700">{hostel.student_count}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className="px-3 py-1.5 rounded-lg text-xs font-bold border-2" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
-                              active
-                            </span>
-                          </td>
+                <>
+                  {/* Mobile Card View */}
+                  <div className="block md:hidden space-y-3">
+                    {hostels.map((hostel) => (
+                      <div key={hostel.name} className="border-2 border-gray-100 rounded-xl p-4 hover:shadow-md transition-all">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-bold text-gray-900">{hostel.name}</h3>
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-bold border-2" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+                            active
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-600 font-semibold">Students:</span>
+                            <span className="text-sm font-bold text-gray-900">{hostel.student_count}</span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{ 
+                                width: `${Math.min(100, (hostel.student_count / Math.max(...hostels.map(h => h.student_count))) * 100)}%`,
+                                background: 'linear-gradient(to right, #014b89, #0369a1)'
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b-2 border-gray-200">
+                          <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Hostel Name</th>
+                          <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Students</th>
+                          <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {hostels.map((hostel) => (
+                          <tr key={hostel.name} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-4 font-bold text-gray-900">{hostel.name}</td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-24 h-3 rounded-full bg-gray-100 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-500"
+                                    style={{ 
+                                      width: `${Math.min(100, (hostel.student_count / Math.max(...hostels.map(h => h.student_count))) * 100)}%`,
+                                      background: 'linear-gradient(to right, #014b89, #0369a1)'
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-sm font-bold text-gray-700">{hostel.student_count}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className="px-3 py-1.5 rounded-lg text-xs font-bold border-2" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+                                active
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
 
-            {/* Caretakers Management */}
-            <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 md:p-8 shadow-lg mb-8 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-              <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 flex items-center gap-3" style={{ color: '#014b89' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(242, 105, 24, 0.1)' }}>
-                  <Shield className="w-5 h-5" style={{ color: '#f26918' }} />
+            {/* Caretakers Management - Mobile Optimized */}
+            <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 flex items-center gap-2 sm:gap-3" style={{ color: '#014b89' }}>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center" style={{ background: 'rgba(242, 105, 24, 0.1)' }}>
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#f26918' }} />
                 </div>
-                Caretakers ({caretakers.length})
+                <span className="text-base sm:text-xl md:text-2xl lg:text-3xl">Caretakers ({caretakers.length})</span>
               </h2>
               {caretakers.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No caretakers found</p>
+                <p className="text-center text-gray-500 py-6 sm:py-8 text-sm sm:text-base">No caretakers found</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b-2 border-gray-200">
-                        <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Name</th>
-                        <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Email</th>
-                        <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Assigned Hostel</th>
-                        <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Phone</th>
-                        <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {caretakers.map((caretaker) => (
-                        <tr key={caretaker.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-4 font-bold text-gray-900">{caretaker.full_name}</td>
-                          <td className="px-4 py-4 text-gray-600">{caretaker.email}</td>
-                          <td className="px-4 py-4 font-medium text-gray-700">{caretaker.hostel_name || 'Not assigned'}</td>
-                          <td className="px-4 py-4 text-gray-600">{caretaker.phone_number || 'N/A'}</td>
-                          <td className="px-4 py-4">
-                            <span 
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold border-2" 
-                              style={caretaker.approval_status === 'approved' 
-                                ? { background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }
-                                : { background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }
-                              }
-                            >
-                              {caretaker.approval_status}
-                            </span>
-                          </td>
+                <>
+                  {/* Mobile Card View */}
+                  <div className="block lg:hidden space-y-3">
+                    {caretakers.map((caretaker) => (
+                      <div key={caretaker.id} className="border-2 border-gray-100 rounded-xl p-4 hover:shadow-md transition-all">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-gray-900 mb-1 break-words">{caretaker.full_name}</h3>
+                            <p className="text-xs text-gray-600 break-words">{caretaker.email}</p>
+                          </div>
+                          <span 
+                            className="px-2.5 py-1 rounded-lg text-xs font-bold border-2 flex-shrink-0 ml-2" 
+                            style={caretaker.approval_status === 'approved' 
+                              ? { background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }
+                              : { background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }
+                            }
+                          >
+                            {caretaker.approval_status}
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600 font-semibold">Hostel:</span>
+                            <span className="text-gray-900 font-medium">{caretaker.hostel_name || 'Not assigned'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600 font-semibold">Phone:</span>
+                            <span className="text-gray-900">{caretaker.phone_number || 'N/A'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b-2 border-gray-200">
+                          <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Name</th>
+                          <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Email</th>
+                          <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Assigned Hostel</th>
+                          <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Phone</th>
+                          <th className="px-4 py-4 text-left font-bold text-gray-600 uppercase tracking-wide text-sm">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {caretakers.map((caretaker) => (
+                          <tr key={caretaker.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-4 font-bold text-gray-900">{caretaker.full_name}</td>
+                            <td className="px-4 py-4 text-gray-600">{caretaker.email}</td>
+                            <td className="px-4 py-4 font-medium text-gray-700">{caretaker.hostel_name || 'Not assigned'}</td>
+                            <td className="px-4 py-4 text-gray-600">{caretaker.phone_number || 'N/A'}</td>
+                            <td className="px-4 py-4">
+                              <span 
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold border-2" 
+                                style={caretaker.approval_status === 'approved' 
+                                  ? { background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }
+                                  : { background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }
+                                }
+                              >
+                                {caretaker.approval_status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
 
-            {/* System Settings */}
-            <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 md:p-8 shadow-lg animate-fade-in" style={{ animationDelay: '0.6s' }}>
-              <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 flex items-center gap-3" style={{ color: '#014b89' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(1, 75, 137, 0.1)' }}>
-                  <Settings className="w-5 h-5" style={{ color: '#014b89' }} />
+            {/* System Settings - Mobile Optimized */}
+            <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg animate-fade-in" style={{ animationDelay: '0.6s' }}>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 flex items-center gap-2 sm:gap-3" style={{ color: '#014b89' }}>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center" style={{ background: 'rgba(1, 75, 137, 0.1)' }}>
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#014b89' }} />
                 </div>
-                System Settings
+                <span className="text-base sm:text-xl md:text-2xl lg:text-3xl">System Settings</span>
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {[
                   { title: 'Maintenance Mode', desc: 'Temporarily disable system access', enabled: false },
                   { title: 'Auto-Backup', desc: 'Daily database backups', enabled: true },
                   { title: 'Email Notifications', desc: 'Send alerts for critical issues', enabled: true },
                   { title: 'Issue Auto-Assignment', desc: 'Automatically assign issues to caretakers', enabled: false }
-                ].map((setting, i) => (
+                ].map((setting) => (
                   <div 
                     key={setting.title} 
-                    className="flex items-center justify-between p-5 md:p-6 rounded-xl bg-gray-50 border-2 border-gray-100 hover:border-gray-200 transition-all"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 sm:p-5 md:p-6 rounded-xl bg-gray-50 border-2 border-gray-100 hover:border-gray-200 transition-all"
                   >
-                    <div>
-                      <p className="font-bold text-gray-900 mb-1">{setting.title}</p>
-                      <p className="text-sm text-gray-600">{setting.desc}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm sm:text-base text-gray-900 mb-1 break-words">{setting.title}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{setting.desc}</p>
                     </div>
                     <button 
-                      className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md"
+                      className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm hover:shadow-md w-full sm:w-auto"
                       style={{
                         background: setting.enabled ? '#10b981' : '#e5e7eb',
                         color: setting.enabled ? 'white' : '#6b7280'
