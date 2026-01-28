@@ -342,6 +342,7 @@ export default function CaretakerRegisterPage() {
                     <option value="Maintenance">Maintenance</option>
                     <option value="Housekeeping">Housekeeping</option>
                     <option value="Security">Security</option>
+                    <option value="Catering">Catering</option>
                     <option value="Management">Management</option>
                   </select>
                 </div>
