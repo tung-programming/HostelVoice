@@ -87,39 +87,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const loadUserProfile = async (authUser: SupabaseUser) => {
+  const loadUserProfile = async (authUser: SupabaseUser, retryCount = 0) => {
     try {
-      console.log('loadUserProfile called for:', authUser.id)
+      console.log('loadUserProfile called for:', authUser.id, 'retry:', retryCount)
+      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+      console.log('Has Anon Key:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
       
-      // Add timeout to prevent infinite hanging
-      const queryPromise = supabase
+      // Validate Supabase connection
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        console.error('Missing Supabase environment variables')
+        return
+      }
+      
+      // Query without artificial timeout - let Supabase handle its own timeouts
+      const startTime = Date.now()
+      const { data: profile, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
         .single()
       
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Query timeout after 5 seconds')), 5000)
-      )
-      
-      const { data: profile, error } = await Promise.race([queryPromise, timeoutPromise]) as any
-
-      console.log('Profile query completed:', { profile, error })
+      const queryDuration = Date.now() - startTime
+      console.log(`Profile query completed in ${queryDuration}ms:`, { profile, error })
 
       if (error) {
-        // Check if error has any meaningful content
-        const hasErrorDetails = error.code || error.message || error.details
+        // Log all error details for debugging
+        console.error('Error loading user profile:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          statusCode: error.statusCode,
+          fullError: JSON.stringify(error)
+        })
         
-        // Only log if it's not a "not found" error and has actual details
-        if (hasErrorDetails && error.code !== 'PGRST116') {
-          console.error('Error loading user profile details:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          })
+        // Check if it's a network/connection error and retry
+        const isNetworkError = !error.code || error.message?.includes('fetch') || error.message?.includes('network')
+        if (isNetworkError && retryCount < 2) {
+          console.log(`Network error detected, retrying (attempt ${retryCount + 2}/3)...`)
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          return loadUserProfile(authUser, retryCount + 1)
         }
-        // If error is empty {}, it's likely an RLS policy blocking access temporarily
+        
+        // If error is PGRST116 (not found) or after retries, continue without user
         return
       }
 
@@ -144,6 +154,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Unexpected error in loadUserProfile:', error)
+      
+      // Check if it's a fetch/network error and retry
+      const isAbortError = error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted'))
+      const isFetchError = error instanceof Error && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))
+      
+      if ((isAbortError || isFetchError) && retryCount < 2) {
+        console.log(`Connection error detected (${error instanceof Error ? error.message : 'unknown'}), retrying (attempt ${retryCount + 2}/3)...`)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        return loadUserProfile(authUser, retryCount + 1)
+      }
+      
+      // Log final failure with helpful message
+      console.error('Failed to load user profile:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        type: error instanceof Error ? error.name : typeof error,
+        retries: retryCount,
+        suggestion: 'Check Supabase connection, RLS policies, and network connectivity'
+      })
     }
   }
 

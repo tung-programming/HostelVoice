@@ -11,6 +11,14 @@ export function createClient() {
         detectSessionInUrl: true,
         storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       },
+      db: {
+        schema: 'public',
+      },
+      global: {
+        headers: {
+          'x-client-info': 'hostel-voice-pwa',
+        },
+      },
     }
   )
 }
