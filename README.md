@@ -12,79 +12,224 @@ A comprehensive full-stack hostel management solution with **Next.js 16** fronte
 
 ## ✨ Features
 
-### 🔐 Authentication & Authorization
+### 🔐 Authentication & Security
 
-- **Role-based access control** (Student, Caretaker, Admin)
-- Secure authentication with Supabase Auth
-- **User approval system** - Admins approve student/caretaker registrations
-- Protected routes with automatic redirects
-- Session management with automatic refresh
+- **Simple Sign Up & Login** - Create your account and log in securely
+- **Three User Types** - Student, Caretaker, and Admin roles with different access
+- **Admin Approval System** - New students and caretakers need admin approval before accessing the system
+- **Protected Pages** - Only logged-in users can access the dashboard
+- **Automatic Login Refresh** - Stay logged in without re-entering password
 
-### 👥 User Roles
+---
 
-#### 🎓 Student
+## 👥 What Each User Can Do
 
-- Report and track issues
-- View announcements
-- Post/search lost & found items
-- Personal dashboard
+### 🎓 Students Can:
 
-#### 🛠️ Caretaker
+1. **Report Problems** - Tell caretakers about broken items, cleaning issues, etc.
+2. **Track Your Issues** - See if your problem is being fixed or already solved
+3. **Read Announcements** - Stay updated with hostel news and important notices
+4. **Lost & Found** - Report lost items or found items, search for your missing belongings
+5. **View Your Profile** - See your hostel details and personal information
+6. **Apply for Leave** - Request permission to leave hostel with dates and reason
+7. **Track Leave Status** - Check if your leave is approved, rejected, or pending
+8. **View Mess Menu** - See what food is being served this week
+9. **Give Mess Feedback** - Rate meals and suggest improvements
+10. **Personal Dashboard** - See all your activities in one place
 
-- Manage and resolve issues
-- Create announcements
-- Manage lost & found items
-- View resident information
+### 🛠️ Caretakers Can:
 
-#### 👔 Admin
+1. **Manage Student Issues** - View all problems reported by students
+2. **Assign Issues** - Give problems to staff members to fix
+3. **Update Issue Status** - Mark issues as in-progress or resolved
+4. **Post Announcements** - Send important updates to all students
+5. **Manage Lost & Found** - Help students find their lost items
+6. **View Student Info** - See details of students in your hostel
+7. **Review Student Leaves** - Approve or reject leave requests from students
+8. **Apply for Own Leave** - Request work leave and suggest replacement
+9. **Track Own Leave** - Check if admin approved your leave
+10. **Upload Mess Menu** - Add weekly food menu with all meals and upload menu card image
+11. **View Mess Feedback** - See student ratings and respond to suggestions
+12. **Caretaker Dashboard** - Monitor hostel activities and pending tasks
 
-- Comprehensive analytics
-- User management
-- System-wide announcements
-- Audit logs and reporting
+### 👔 Admins Can:
 
-### 🎯 Core Modules
+1. **Approve New Users** - Accept or reject student/caretaker registrations
+2. **View All Issues** - See every problem reported across all hostels
+3. **System Analytics** - View graphs and statistics of hostel activities
+4. **Manage Users** - See all students and staff across all hostels
+5. **Post System-Wide Announcements** - Send urgent messages to everyone
+6. **Review Caretaker Leaves** - Approve/reject work leave from caretakers
+7. **Assign Replacement Caretakers** - Ensure hostel is always staffed
+8. **View Leave Calendar** - See who is on leave and when
+9. **View All Mess Menus** - Monitor food quality across hostels
+10. **Access Audit Logs** - Track all important actions in the system
+11. **Admin Dashboard** - Complete overview with all metrics
 
-- **📋 Issue Tracking** - Report, assign, and resolve hostel issues with priority levels and status tracking
-  - View detailed issue information with modal dialogs
-  - Category-based filtering (maintenance, cleaning, security, facilities, other)
-  - Priority management (low, medium, high, urgent)
-  - Role-based issue visibility and assignment
+---
 
-- **📢 Announcements** - Create and manage announcements with audience targeting
-  - Target specific audiences (all, students, staff)
-  - Pin important announcements
-  - Full CRUD operations with role-based permissions
-  - Real-time updates across all connected users
+## 🎯 Main Features Explained Simply
 
-- **🔍 Lost & Found** - Comprehensive lost and found item management
-  - Report lost or found items with detailed information
-  - Track location (location_lost/location_found/current_location)
-  - Date tracking with datetime precision
-  - Contact information for reporters
-  - Category-based organization (wallet, electronics, bags, keys, documents, clothing, other)
-  - Status tracking (open, claimed, returned, closed)
-  - Smart matching notifications for potential matches
-  - All students can view all items for better recovery chances
+### 1. 📋 **Issue & Complaint Tracking**
+**What it does**: Let students report problems, and staff can fix them
 
-- **👥 Resident Management** - Role-based student information access
-  - Students: View only their own profile
-  - Caretakers: View all students in their assigned hostel
-  - Admins: View all students across all hostels
-  - Search and filter capabilities
-  - Approval status tracking
+**How it works**:
+- Student reports a problem (like "AC not working in Room 301")
+- Choose category (maintenance, cleaning, security, facilities, other)
+- Set priority (low, medium, high, urgent)
+- Caretaker sees the issue and assigns it to someone
+- Student gets updates when status changes
+- Issue marked as resolved when fixed
+- Everyone can see issue history and details
 
-- **📊 Analytics** - Comprehensive data-driven insights
-  - Real-time statistics for issues, announcements, and items
-  - Role-specific dashboards with relevant metrics
-  - Visual charts and graphs (powered by Recharts)
-  - Export capabilities for reporting
+### 2. 📢 **Announcements**
+**What it does**: Share important news with everyone in the hostel
 
-- **🔔 Notifications** - In-app notification system
-  - Real-time updates for issue assignments
-  - Lost item match notifications
-  - Announcement alerts
-  - Action-based notifications
+**How it works**:
+- Caretaker or admin writes announcement
+- Choose who should see it (all students, only staff, or everyone)
+- Pin important announcements to show at top
+- Students see announcements on their dashboard
+- Delete or edit announcements when needed
+
+### 3. 🔍 **Lost & Found System**
+**What it does**: Help students find lost items and return found items
+
+**How it works**:
+- Report lost item with description, when/where lost, contact info
+- Report found item with description, when/where found, current location
+- Browse all lost and found items (wallet, phone, keys, documents, bags, clothes, etc.)
+- Contact the person who posted the item
+- Mark item as claimed when owner found
+- System shows smart matches for similar items
+- All students can see all items for better chances of finding matches
+
+### 4. 👥 **Resident Information**
+**What it does**: Store and view student details
+
+**How it works**:
+- Students see their own profile with room number, hostel name, emergency contacts
+- Caretakers see all students in their hostel
+- Admins see all students across all hostels
+- Search by name, room number, or student ID
+- View contact information for emergencies
+
+### 5. 📊 **Analytics Dashboard**
+**What it does**: Show statistics and graphs about hostel activities
+
+**What you see**:
+- Total number of open issues, resolved issues
+- How many announcements posted this month
+- Lost & found items statistics
+- Active users and approval statistics
+- Beautiful charts and graphs
+- Different data for each role (student/caretaker/admin)
+
+### 6. ✅ **User Approval System**
+**What it does**: Admins control who can join the system
+
+**How it works**:
+- New student/caretaker registers with details
+- Admin sees pending approval requests
+- Admin reviews details and approves or rejects
+- Approved users can login and use the system
+- Rejected users cannot access the dashboard
+- Admins can add rejection reason
+
+### 7. 🏖️ **Leave Application System**
+
+#### For Students:
+**What it does**: Request permission to leave hostel temporarily
+
+**How it works**:
+- Fill leave form with dates, destination, reason, contact during leave
+- Submit to caretaker for approval
+- Track status (pending, approved, rejected, more info needed)
+- See caretaker's comments or rejection reason
+- Get notification when status changes
+
+#### For Caretakers:
+**What it does**: Review student leaves AND apply for own work leave
+
+**How it works**:
+- **Review Student Leaves**: Approve/reject student leave requests, ask for more info if needed
+- **Apply for Own Leave**: Request work leave from admin, suggest replacement caretaker, upload documents (medical certificate for sick leave)
+- **Track Own Status**: See if admin approved your leave request
+
+#### For Admins:
+**What it does**: Manage caretaker leaves and ensure proper staffing
+
+**How it works**:
+- Review all caretaker leave requests
+- Approve, conditionally approve, or reject
+- Assign replacement caretaker for coverage
+- View leave calendar to see staffing schedule
+- Ensure hostels are never without caretaker supervision
+
+### 8. 🍽️ **Mess Management System**
+
+#### For Students:
+**What it does**: View menu and give feedback on mess food
+
+**How it works**:
+- View weekly menu in calendar format (all 7 days)
+- See breakfast, lunch, snacks, dinner for each day
+- Download menu card image uploaded by caretaker
+- Submit feedback after eating (rate meals, suggest changes)
+- See caretaker's response to your feedback
+
+#### For Caretakers:
+**What it does**: Upload menus and handle student feedback
+
+**How it works**:
+- Upload menu card image (physical menu photo)
+- Fill weekly menu for all days and meals
+- Enter items as comma-separated (e.g., "Idli, Sambar, Chutney, Tea")
+- System validates all meals are filled before saving
+- View all student feedback submissions
+- Respond to feedback and mark as reviewed
+- See ratings and suggestions from students
+
+#### For Admins:
+**What it does**: Monitor mess operations across hostels
+
+**How it works**:
+- View all menus from all hostels
+- See all student feedback and ratings
+- Access mess analytics and reports
+- Monitor food quality and student satisfaction
+- Ensure caretakers are managing mess properly
+
+### 9. 🔔 **Smart Notifications**
+**What it does**: Keep you updated about important activities
+
+**You get notified for**:
+- When your reported issue is assigned to someone
+- When your issue status changes (in-progress/resolved)
+- When your leave is approved or rejected
+- New announcements posted
+- When someone finds an item matching your lost item report
+- Important system updates
+
+### 10. 📱 **Role-Based Dashboard**
+**What it does**: Show different information based on who you are
+
+**How it works**:
+- Students see: My issues, announcements, lost items, mess menu, leave status
+- Caretakers see: All issues to manage, student leaves to review, mess management, own leave status
+- Admins see: All analytics, user approvals, system overview, caretaker leaves, mess monitoring
+- Everyone sees only what they need - no confusion!
+
+---
+
+## 🔒 Security Features
+
+- **Password Protection** - Your password is encrypted and secure
+- **Role-Based Access** - You can only see and do what your role allows
+- **Database Security** - Row-level security ensures data privacy
+- **Audit Logs** - System tracks all important actions for accountability
+- **Session Management** - Automatic logout after inactivity
+- **Admin Controls** - Only admins can approve users and access sensitive data
 
 ---
 
