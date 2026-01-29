@@ -126,6 +126,10 @@ export default function RegisterPage() {
                       <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#f26918' }} />
                       <span>View announcements</span>
                     </li>
+                    <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#f26918' }} />
+                      <span>& many more</span>
+                    </li>
                   </ul>
                 </div>
                 
@@ -163,6 +167,10 @@ export default function RegisterPage() {
                       <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#f26918' }} />
                       <span>Resident directory</span>
                     </li>
+                    <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#f26918' }} />
+                      <span>& many more</span>
+                    </li>
                   </ul>
                 </div>
                 
@@ -199,6 +207,10 @@ export default function RegisterPage() {
                     <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
                       <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#f26918' }} />
                       <span>Full system control</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#f26918' }} />
+                      <span>& many more</span>
                     </li>
                   </ul>
                 </div>
