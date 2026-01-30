@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { AlertCircle, Plus, Trash2, Edit2, Calendar, Pin, Loader2, RefreshCw } from 'lucide-react'
 import { announcementsApi, Announcement } from '@/lib/api'
 import { toast } from 'sonner'
@@ -17,6 +18,8 @@ export default function AnnouncementsManagePage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [announcementToDelete, setAnnouncementToDelete] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -43,7 +46,7 @@ export default function AnnouncementsManagePage() {
     fetchAnnouncements()
   }, [fetchAnnouncements])
 
-  if (user?.role !== 'admin') {
+  if (user?.role !== 'admin' && user?.role !== 'caretaker') {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-8">
         <div className="max-w-md w-full rounded-2xl sm:rounded-3xl p-6 sm:p-8 border-2 shadow-xl" style={{ borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.05)' }}>
@@ -53,7 +56,7 @@ export default function AnnouncementsManagePage() {
             </div>
             <div>
               <h3 className="font-bold text-lg sm:text-xl text-gray-900 mb-2">Access Denied</h3>
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">Only administrators can manage announcements.</p>
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">Only administrators and caretakers can manage announcements.</p>
             </div>
           </div>
         </div>
@@ -129,15 +132,31 @@ export default function AnnouncementsManagePage() {
     setShowForm(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this announcement?')) return
+  const handleDelete = (id: string) => {
+    console.log('Delete clicked for announcement:', id)
+    setAnnouncementToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!announcementToDelete) return
 
     try {
-      await announcementsApi.delete(id)
-      toast.success('Announcement deleted')
+      console.log('Deleting announcement:', announcementToDelete)
+      await announcementsApi.delete(announcementToDelete)
+      toast.success('Announcement deleted successfully')
       fetchAnnouncements()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete announcement')
+      console.error('Delete error:', error)
+      // Handle specific permission errors from backend
+      if (error.status === 403 || error.message?.includes('permission') || error.message?.includes('authorized')) {
+        toast.error('You do not have permission to delete this announcement')
+      } else {
+        toast.error(error.message || 'Failed to delete announcement')
+      }
+    } finally {
+      setDeleteDialogOpen(false)
+      setAnnouncementToDelete(null)
     }
   }
 
@@ -153,11 +172,9 @@ export default function AnnouncementsManagePage() {
 
   const canEditAnnouncement = (announcement: Announcement): boolean => {
     if (!user) return false
-    if (user.role === 'admin') return true
-    if (user.role === 'caretaker') {
-      return announcement.created_by === user.id
-    }
-    return false
+    // Allow both admins and caretakers to see edit/delete buttons
+    // Backend will handle actual permission validation
+    return user.role === 'admin' || user.role === 'caretaker'
   }
 
   const getPriorityColor = (priority: string) => {
@@ -230,7 +247,9 @@ export default function AnnouncementsManagePage() {
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-1 sm:mb-2" style={{ color: '#014b89' }}>
             Manage Announcements
           </h1>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600">Create, edit, and manage hostel announcements</p>
+          <p className="text-sm sm:text-base md:text-lg text-gray-600">
+            {user?.role === 'admin' ? 'Create, edit, and manage all hostel announcements' : 'Create and manage your announcements'}
+          </p>
         </div>
 
         {/* Create/Edit Form - Mobile Optimized */}
@@ -508,7 +527,11 @@ export default function AnnouncementsManagePage() {
                               Edit
                             </Button>
                             <Button
-                              onClick={() => handleDelete(announcement.id)}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleDelete(announcement.id)
+                              }}
                               variant="outline"
                               className="border-2 px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 font-semibold h-9 sm:h-auto"
                               style={{ borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
@@ -529,6 +552,40 @@ export default function AnnouncementsManagePage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md mx-4 rounded-2xl bg-white" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-left" style={{ color: '#014b89' }}>
+              Delete Announcement
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2 text-left">
+              Are you sure you want to delete this announcement? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col sm:flex-row gap-3 mt-6">
+            <Button
+              onClick={confirmDelete}
+              className="text-white font-bold h-11 px-6 rounded-xl shadow-lg transition-all flex-1"
+              style={{ background: '#ef4444' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+            >
+              Delete
+            </Button>
+            <Button
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setAnnouncementToDelete(null)
+              }}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold h-11 px-6 rounded-xl flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
