@@ -82,7 +82,6 @@ export default function MessPage() {
   const [cleanlinessRating, setCleanlinessRating] = useState(0);
   const [comments, setComments] = useState("");
   const [studentName, setStudentName] = useState("");
-  const [photos, setPhotos] = useState<File[]>([]);
 
   const getDayName = (date: Date) => {
     return daysOfWeek[date.getDay() === 0 ? 6 : date.getDay() - 1];
@@ -110,12 +109,6 @@ export default function MessPage() {
     );
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setPhotos(Array.from(e.target.files));
-    }
-  };
-
   const handleSubmitFeedback = () => {
     if (!studentName || overallRating === 0) {
       toast.error("Please provide your name and overall rating");
@@ -132,7 +125,6 @@ export default function MessPage() {
     setCleanlinessRating(0);
     setComments("");
     setStudentName("");
-    setPhotos([]);
   };
 
   const getMealIcon = (meal: string) => {
@@ -396,31 +388,6 @@ export default function MessPage() {
                       rows={4}
                       className="border-2 border-gray-200 focus:border-[#014b89] focus:ring-[#014b89] rounded-xl text-sm sm:text-base resize-none"
                     />
-                  </div>
-
-                  {/* Photo Upload */}
-                  <div className="space-y-2">
-                    <Label htmlFor="photos" className="text-sm font-bold text-gray-900">
-                      Upload Photos (Optional)
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="photos"
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handlePhotoUpload}
-                        className="cursor-pointer border-2 border-gray-200 rounded-xl h-11 sm:h-12 text-sm sm:text-base"
-                      />
-                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(1, 75, 137, 0.1)' }}>
-                        <Upload className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: '#014b89' }} />
-                      </div>
-                    </div>
-                    {photos.length > 0 && (
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                        {photos.length} photo(s) selected
-                      </p>
-                    )}
                   </div>
 
                   {/* Submit Button */}

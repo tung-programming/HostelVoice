@@ -150,7 +150,6 @@ export default function MessManagementPage() {
   const [filterMeal, setFilterMeal] = useState("all");
   const [filterRating, setFilterRating] = useState("all");
   const [filterDate, setFilterDate] = useState("all");
-  const [showPhotosOnly, setShowPhotosOnly] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [hasExistingMenu, setHasExistingMenu] = useState(true); // Set to false if no menu exists
   
@@ -173,7 +172,6 @@ export default function MessManagementPage() {
   const filteredFeedbacks = dummyFeedbacks.filter((feedback) => {
     if (filterMeal !== "all" && feedback.meal.toLowerCase() !== filterMeal) return false;
     if (filterRating !== "all" && feedback.rating !== parseInt(filterRating)) return false;
-    if (showPhotosOnly && !feedback.hasPhotos) return false;
     return true;
   });
 
@@ -779,7 +777,7 @@ export default function MessManagementPage() {
                     <Filter className="h-4 w-4" style={{ color: '#014b89' }} />
                     <Label className="text-sm font-bold">Filters:</Label>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2 sm:gap-3">
+                  <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 sm:gap-3">
                     <Select value={filterMeal} onValueChange={setFilterMeal}>
                       <SelectTrigger className="h-9 sm:h-10 border-2 border-gray-200 rounded-xl text-xs sm:text-sm">
                         <SelectValue placeholder="Meal Type" />
@@ -806,17 +804,6 @@ export default function MessManagementPage() {
                         <SelectItem value="5">5 Stars</SelectItem>
                       </SelectContent>
                     </Select>
-
-                    <Button
-                      variant={showPhotosOnly ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setShowPhotosOnly(!showPhotosOnly)}
-                      className="col-span-2 sm:col-span-1 border-2 font-semibold h-9 sm:h-10 text-xs sm:text-sm"
-                      style={showPhotosOnly ? { background: '#014b89' } : { borderColor: '#014b89', color: '#014b89' }}
-                    >
-                      <ImageIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      With Photos Only
-                    </Button>
                   </div>
                 </div>
 
@@ -897,16 +884,6 @@ export default function MessManagementPage() {
                             Mark Reviewed
                           </Button>
                         )}
-                        {feedback.hasPhotos && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-2 h-8 px-3"
-                            style={{ borderColor: '#014b89', color: '#014b89' }}
-                          >
-                            <ImageIcon className="h-3 w-3" />
-                          </Button>
-                        )}
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
@@ -958,7 +935,6 @@ export default function MessManagementPage() {
                         <TableHead className="font-bold text-gray-600 text-xs uppercase">Student</TableHead>
                         <TableHead className="font-bold text-gray-600 text-xs uppercase">Rating</TableHead>
                         <TableHead className="font-bold text-gray-600 text-xs uppercase">Comments</TableHead>
-                        <TableHead className="font-bold text-gray-600 text-xs uppercase">Photos</TableHead>
                         <TableHead className="font-bold text-gray-600 text-xs uppercase">Status</TableHead>
                         <TableHead className="font-bold text-gray-600 text-xs uppercase">Actions</TableHead>
                       </TableRow>
@@ -991,13 +967,6 @@ export default function MessManagementPage() {
                             </div>
                           </TableCell>
                           <TableCell className="max-w-xs truncate text-sm">{feedback.comments}</TableCell>
-                          <TableCell>
-                            {feedback.hasPhotos && (
-                              <Button variant="ghost" size="sm">
-                                <ImageIcon className="h-4 w-4" style={{ color: '#014b89' }} />
-                              </Button>
-                            )}
-                          </TableCell>
                           <TableCell>
                             <Badge
                               className="text-xs font-bold px-2 py-1 border-2"
