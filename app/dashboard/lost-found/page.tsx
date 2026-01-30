@@ -137,17 +137,16 @@ export default function LostFoundPage() {
     return matchesType && matchesSearch
   })
 
-  const getCategoryIcon = (category: string) => {
-    const icons: Record<string, string> = {
-      wallet: '👛',
-      electronics: '📱',
-      bags: '🎒',
-      keys: '🔑',
-      documents: '📄',
-      clothing: '👕',
-      other: '📦'
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      electronics: 'Electronics',
+      bags: 'Bags',
+      keys: 'Keys',
+      documents: 'Documents',
+      clothing: 'Clothing',
+      other: 'Other'
     }
-    return icons[category?.toLowerCase()] || '📦'
+    return labels[category?.toLowerCase()] || 'Other'
   }
 
   const getTypeColor = (type: 'lost' | 'found') => {
@@ -249,7 +248,7 @@ export default function LostFoundPage() {
                       borderColor: formData.type === 'lost' ? 'rgba(239, 68, 68, 0.3)' : '#e5e7eb'
                     }}
                   >
-                    ❌ Lost Item
+                    Lost Item
                   </button>
                   <button
                     type="button"
@@ -261,7 +260,7 @@ export default function LostFoundPage() {
                       borderColor: formData.type === 'found' ? 'rgba(16, 185, 129, 0.3)' : '#e5e7eb'
                     }}
                   >
-                    ✅ Found Item
+                    Found Item
                   </button>
                 </div>
               </div>
@@ -286,14 +285,14 @@ export default function LostFoundPage() {
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full h-11 sm:h-12 px-3 sm:px-4 border-2 border-gray-200 rounded-xl focus:border-[#014b89] focus:ring-[#014b89] bg-white text-gray-900 font-medium transition-all text-sm sm:text-base"
+                  required
                 >
-                  <option value="wallet">👛 Wallet</option>
-                  <option value="electronics">📱 Electronics</option>
-                  <option value="bags">🎒 Bags</option>
-                  <option value="keys">🔑 Keys</option>
-                  <option value="documents">📄 Documents</option>
-                  <option value="clothing">👕 Clothing</option>
-                  <option value="other">📦 Other</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="bags">Bags</option>
+                  <option value="keys">Keys</option>
+                  <option value="documents">Documents</option>
+                  <option value="clothing">Clothing</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
 
@@ -440,7 +439,7 @@ export default function LostFoundPage() {
                   borderColor: filter === type ? '#014b89' : '#e5e7eb'
                 }}
               >
-                {type === 'all' ? 'All Items' : type === 'lost' ? '❌ Lost' : '✅ Found'}
+                {type === 'all' ? 'All Items' : type === 'lost' ? 'Lost' : 'Found'}
               </button>
             ))}
           </div>
@@ -501,38 +500,39 @@ export default function LostFoundPage() {
               return (
                 <div
                   key={item.id}
-                  className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:border-gray-300 hover:shadow-xl transition-all duration-300 animate-fade-in"
+                  className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:border-gray-300 hover:shadow-xl transition-all duration-300 animate-fade-in relative overflow-visible"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
+                  {/* Lost/Found Badge - Top Right Corner */}
+                  <span 
+                    className="absolute -top-3 -right-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-extrabold border-3 shadow-2xl uppercase tracking-wider z-10 transform rotate-3"
+                    style={{ 
+                      background: item.type === 'lost' ? '#ef4444' : '#10b981',
+                      color: 'white',
+                      borderColor: 'white',
+                      borderWidth: '3px',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    {item.type === 'lost' ? 'LOST' : 'FOUND'}
+                  </span>
+
                   <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                        <span className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0">{getCategoryIcon(item.category)}</span>
-                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 break-words">{item.item_name}</h3>
-                      </div>
+                    <div className="flex-1 min-w-0 pr-16">
+                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 break-words mb-2 sm:mb-3">{item.item_name}</h3>
                       <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-2 sm:mb-3 break-words">{item.description}</p>
                       {item.notes && (
                         <p className="text-xs sm:text-sm text-gray-500 italic bg-gray-50 p-2 sm:p-3 rounded-lg sm:rounded-xl border border-gray-200 break-words">
-                          💡 {item.notes}
+                          Note: {item.notes}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Tags - Mobile Optimized */}
+                  {/* Category Tag */}
                   <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
-                    <span 
-                      className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold border-2"
-                      style={{ 
-                        background: typeColor.bg, 
-                        color: typeColor.text,
-                        borderColor: typeColor.border
-                      }}
-                    >
-                      {item.type === 'lost' ? '❌ Lost' : '✅ Found'}
-                    </span>
-                    <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm bg-gray-100 text-gray-700 font-semibold border-2 border-gray-200 capitalize">
-                      {item.category}
+                    <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold border-2 capitalize" style={{ background: 'rgba(1, 75, 137, 0.1)', color: '#014b89', borderColor: 'rgba(1, 75, 137, 0.3)' }}>
+                      {getCategoryLabel(item.category)}
                     </span>
                   </div>
 
@@ -578,7 +578,7 @@ export default function LostFoundPage() {
                   {item.contact_info && (
                     <div className="mb-3 sm:mb-4 px-3 sm:px-4 py-2 sm:py-3 bg-blue-50 border-2 border-blue-100 rounded-lg sm:rounded-xl">
                       <p className="text-xs sm:text-sm font-semibold text-blue-700 break-words">
-                        📞 Contact: {item.contact_info}
+                        Contact: {item.contact_info}
                       </p>
                     </div>
                   )}
@@ -618,7 +618,7 @@ export default function LostFoundPage() {
                   <div className="text-[10px] sm:text-xs text-gray-500 text-center font-medium break-words">
                     Posted by: <span className="font-bold text-gray-700">{item.reporter?.full_name || 'Anonymous'}</span>
                     {item.reporter?.phone_number && (
-                      <span className="ml-2 whitespace-nowrap">• 📞 {item.reporter.phone_number}</span>
+                      <span className="ml-2 whitespace-nowrap">• {item.reporter.phone_number}</span>
                     )}
                   </div>
                 </div>
