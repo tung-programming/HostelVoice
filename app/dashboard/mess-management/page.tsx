@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import {
   getCurrentWeeklyMenu,
   createWeeklyMenu,
@@ -60,6 +61,7 @@ import {
   getFeedbackStats,
   getLowRatedMeals,
   markFeedbackReviewed,
+  getRatingTrends,
   type WeeklyMenuWithMeals,
   type MessFeedback,
   type FeedbackStats,
@@ -75,7 +77,7 @@ type LowRatedMeal = {
 
 export default function MessManagementPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("menu");
   
   // Menu state
   const [weeklyMenu, setWeeklyMenu] = useState<WeeklyMenuWithMeals | null>(null);
@@ -89,6 +91,8 @@ export default function MessManagementPage() {
   const [lowRatedMeals, setLowRatedMeals] = useState<LowRatedMeal[]>([]);
   const [totalFeedbacks, setTotalFeedbacks] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [ratingTrends, setRatingTrends] = useState<{ date: string; avg_rating: number; count: number }[]>([]);
+  const [isLoadingTrends, setIsLoadingTrends] = useState(true);
   
   // Filters
   const [filterMeal, setFilterMeal] = useState<string>("all");
@@ -184,6 +188,8 @@ export default function MessManagementPage() {
     loadFeedbacks();
     if (userRole === "admin") {
       loadAnalytics();
+    } else {
+      loadTrends();
     }
   }, [hostelName, userRole]);
 
@@ -237,14 +243,31 @@ export default function MessManagementPage() {
   async function loadAnalytics() {
     try {
       const hostelFilter = userRole === 'admin' ? null : hostelName;
-      const [stats, lowRated] = await Promise.all([
+      const [stats, lowRated, trends] = await Promise.all([
         getFeedbackStats(hostelFilter, 30),
-        getLowRatedMeals(hostelFilter, 30, 5)
+        getLowRatedMeals(hostelFilter, 30, 5),
+        getRatingTrends(hostelFilter, 30)
       ]);
       setFeedbackStats(stats);
       setLowRatedMeals(lowRated);
+      setRatingTrends(trends);
+      setIsLoadingTrends(false);
     } catch (error) {
       console.error('[MessManagement] Error loading analytics:', error);
+      setIsLoadingTrends(false);
+    }
+  }
+
+  async function loadTrends() {
+    setIsLoadingTrends(true);
+    try {
+      const hostelFilter = userRole === 'admin' ? null : hostelName;
+      const trends = await getRatingTrends(hostelFilter, 30);
+      setRatingTrends(trends);
+    } catch (error) {
+      console.error('[MessManagement] Error loading trends:', error);
+    } finally {
+      setIsLoadingTrends(false);
     }
   }
 
@@ -337,6 +360,25 @@ export default function MessManagementPage() {
       sunday: { breakfast: "", lunch: "", snacks: "", dinner: "" },
     });
     setMenuPhoto(null);
+  };
+
+  const handleDownloadMenuImage = async (imageUrl: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `weekly-menu-${new Date().toISOString().split('T')[0]}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Menu card downloaded successfully!");
+    } catch (error) {
+      console.error('[MessManagement] Error downloading menu image:', error);
+      toast.error("Failed to download menu card");
+    }
   };
 
   const handleExportFeedback = () => {
@@ -536,10 +578,76 @@ export default function MessManagementPage() {
                     Rating Trends (Last 30 Days)
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Daily average ratings over time</p>
-                  <div className="h-40 sm:h-48 md:h-56 flex items-center justify-center text-gray-400">
-                    <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 opacity-20" />
-                    <span className="ml-3 sm:ml-4 text-xs sm:text-sm">Graph visualization would go here</span>
-                  </div>
+                  {isLoadingTrends ? (
+                    <div className="h-40 sm:h-48 md:h-56 flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#014b89' }} />
+                      <span className="ml-3 text-gray-600">Loading trends...</span>
+                    </div>
+                  ) : ratingTrends.length === 0 ? (
+                    <div className="h-40 sm:h-48 md:h-56 flex items-center justify-center text-gray-400">
+                      <BarChart3 className="h-12 w-12 sm:h-16 sm:w-16 opacity-20" />
+                      <span className="ml-3 sm:ml-4 text-xs sm:text-sm">No data available for the last 30 days</span>
+                    </div>
+                  ) : (
+                    <div className="h-64 sm:h-72 md:h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={ratingTrends} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis 
+                            dataKey="date" 
+                            stroke="#6b7280"
+                            fontSize={12}
+                            tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          />
+                          <YAxis 
+                            stroke="#6b7280"
+                            fontSize={12}
+                            domain={[0, 5]}
+                            ticks={[0, 1, 2, 3, 4, 5]}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '2px solid #014b89', 
+                              borderRadius: '12px',
+                              padding: '8px 12px'
+                            }}
+                            labelFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            formatter={(value: any, name: string) => {
+                              if (name === 'avg_rating') return [value.toFixed(1) + ' ⭐', 'Avg Rating'];
+                              if (name === 'count') return [value, 'Feedbacks'];
+                              return [value, name];
+                            }}
+                          />
+                          <Legend 
+                            wrapperStyle={{ paddingTop: '20px' }}
+                            formatter={(value) => {
+                              if (value === 'avg_rating') return 'Average Rating';
+                              if (value === 'count') return 'Number of Feedbacks';
+                              return value;
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="avg_rating" 
+                            stroke="#014b89" 
+                            strokeWidth={3}
+                            dot={{ fill: '#014b89', r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            stroke="#f26918" 
+                            strokeWidth={2}
+                            dot={{ fill: '#f26918', r: 3 }}
+                            activeDot={{ r: 5 }}
+                            hide
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -759,7 +867,7 @@ export default function MessManagementPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => weeklyMenu.menu_image_url && window.open(weeklyMenu.menu_image_url, '_blank')}
+                              onClick={() => weeklyMenu.menu_image_url && handleDownloadMenuImage(weeklyMenu.menu_image_url)}
                               className="border-2 font-semibold h-8 sm:h-9 text-xs sm:text-sm"
                               style={{ borderColor: '#10b981', color: '#10b981' }}
                             >
@@ -1416,10 +1524,76 @@ export default function MessManagementPage() {
                   Rating Trends Over Time
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Track how ratings change over the past month</p>
-                <div className="h-40 sm:h-48 md:h-56 flex items-center justify-center text-gray-400">
-                  <TrendingUp className="h-12 w-12 sm:h-16 sm:w-16 opacity-20" />
-                  <span className="ml-3 sm:ml-4 text-xs sm:text-sm">Trend graph visualization would go here</span>
-                </div>
+                {isLoadingTrends ? (
+                  <div className="h-40 sm:h-48 md:h-56 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#014b89' }} />
+                    <span className="ml-3 text-gray-600">Loading trends...</span>
+                  </div>
+                ) : ratingTrends.length === 0 ? (
+                  <div className="h-40 sm:h-48 md:h-56 flex items-center justify-center text-gray-400">
+                    <TrendingUp className="h-12 w-12 sm:h-16 sm:w-16 opacity-20" />
+                    <span className="ml-3 sm:ml-4 text-xs sm:text-sm">No data available for the last 30 days</span>
+                  </div>
+                ) : (
+                  <div className="h-64 sm:h-72 md:h-80 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={ratingTrends} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="#6b7280"
+                          fontSize={12}
+                          tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        />
+                        <YAxis 
+                          stroke="#6b7280"
+                          fontSize={12}
+                          domain={[0, 5]}
+                          ticks={[0, 1, 2, 3, 4, 5]}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'white', 
+                            border: '2px solid #014b89', 
+                            borderRadius: '12px',
+                            padding: '8px 12px'
+                          }}
+                          labelFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                          formatter={(value: any, name: string) => {
+                            if (name === 'avg_rating') return [value.toFixed(1) + ' ⭐', 'Avg Rating'];
+                            if (name === 'count') return [value, 'Feedbacks'];
+                            return [value, name];
+                          }}
+                        />
+                        <Legend 
+                          wrapperStyle={{ paddingTop: '20px' }}
+                          formatter={(value) => {
+                            if (value === 'avg_rating') return 'Average Rating';
+                            if (value === 'count') return 'Number of Feedbacks';
+                            return value;
+                          }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="avg_rating" 
+                          stroke="#014b89" 
+                          strokeWidth={3}
+                          dot={{ fill: '#014b89', r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="count" 
+                          stroke="#f26918" 
+                          strokeWidth={2}
+                          dot={{ fill: '#f26918', r: 3 }}
+                          activeDot={{ r: 5 }}
+                          hide
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>
