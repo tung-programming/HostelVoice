@@ -471,7 +471,8 @@ export default function IssuesPage() {
                     {/* Action Buttons - Mobile Optimized */}
                     {(user.role === 'caretaker' || user.role === 'admin') && issue.status !== 'resolved' && issue.status !== 'closed' && (
                       <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2 sm:gap-3">
-                        {!issue.assigned_to && (
+                        {/* Assign button - Only shown for admins, not caretakers */}
+                        {user.role === 'admin' && !issue.assigned_to && (
                           <Button
                             onClick={() => {
                               setSelectedIssue(issue)
@@ -523,8 +524,8 @@ export default function IssuesPage() {
         )}
       </div>
 
-      {/* Assign Modal - Mobile Optimized */}
-      {showAssignModal && selectedIssue && (
+      {/* Assign Modal - Mobile Optimized (Admin Only) */}
+      {user.role === 'admin' && showAssignModal && selectedIssue && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4" style={{ color: '#014b89' }}>Assign Issue</h3>
