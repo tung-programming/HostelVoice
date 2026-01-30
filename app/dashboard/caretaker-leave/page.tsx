@@ -173,7 +173,7 @@ export default function CaretakerLeavePage() {
         {
           status: newStatus as 'approved' | 'rejected' | 'more_info',
           caretaker_notes: reviewAction === 'approve' ? reviewNotes : undefined,
-          rejection_reason: reviewAction === 'reject' ? reviewNotes : undefined,
+          rejection_reason: (reviewAction === 'reject' || reviewAction === 'moreinfo') ? reviewNotes : undefined,
         },
         user.name || 'Caretaker'
       );

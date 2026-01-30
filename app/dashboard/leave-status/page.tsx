@@ -25,6 +25,7 @@ interface Leave {
   returnStatus: string;
   actualReturnDate?: Date;
   rejectionReason?: string;
+  caretakerNotes?: string;
 }
 
 // Dummy data - student's own leave requests
@@ -171,14 +172,38 @@ export default function LeaveStatusPage() {
     const duration = Math.ceil((leave.endDate.getTime() - leave.startDate.getTime()) / (1000 * 60 * 60 * 24));
     const isActive = leave.status === 'Approved' && leave.returnStatus === 'Not Returned' && new Date() >= leave.startDate && new Date() <= leave.endDate;
     
+    // Get solid color for status badge
+    const getStatusSolidColor = (status: string) => {
+      switch (status) {
+        case 'Approved': return '#10b981'
+        case 'Rejected': return '#ef4444'
+        default: return '#eab308' // Pending
+      }
+    }
+    
     return (
       <div 
-        className="bg-white border-2 rounded-xl sm:rounded-2xl overflow-hidden mb-4 hover:shadow-lg transition-all"
+        className="bg-white border-2 rounded-xl sm:rounded-2xl overflow-hidden mb-4 hover:shadow-lg transition-all relative"
         style={{ borderColor: isActive ? '#10b981' : '#e5e7eb' }}
       >
+        {/* Status Badge - Top Right Corner */}
+        <span 
+          className="absolute -top-3 -right-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-extrabold uppercase tracking-wider z-10 transform rotate-3"
+          style={{ 
+            background: getStatusSolidColor(leave.status),
+            color: 'white',
+            borderColor: 'white',
+            borderWidth: '3px',
+            borderStyle: 'solid',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          {leave.status}
+        </span>
+
         <div className="p-4 sm:p-5 md:p-6 border-b-2 border-gray-100">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <div className="flex-1">
+            <div className="flex-1 pr-20">
               <h3 className="text-base sm:text-lg md:text-xl font-bold mb-2" style={{ color: '#014b89' }}>
                 {leave.leaveType}
                 {isActive && (
@@ -191,7 +216,6 @@ export default function LeaveStatusPage() {
                 )}
               </h3>
               <div className="flex flex-wrap gap-2">
-                {getStatusBadge(leave.status)}
                 {leave.status === 'Approved' && getReturnBadge(leave.returnStatus)}
               </div>
             </div>
@@ -479,7 +503,21 @@ export default function LeaveStatusPage() {
                   <p className="text-sm text-gray-600 mb-2">
                     Reviewed by {selectedLeave.reviewedBy} on {format(selectedLeave.reviewedAt, 'PPP p')}
                   </p>
-                  {selectedLeave.rejectionReason && (
+                  {selectedLeave.caretakerNotes && (
+                    <div className="mt-2 p-3 rounded-lg border-2" style={{ background: 'rgba(1, 75, 137, 0.05)', borderColor: 'rgba(1, 75, 137, 0.3)' }}>
+                      <p className="text-sm font-medium" style={{ color: '#014b89' }}>
+                        <strong>Notes:</strong> {selectedLeave.caretakerNotes}
+                      </p>
+                    </div>
+                  )}
+                  {selectedLeave.status === 'more_info' && selectedLeave.rejectionReason && (
+                    <div className="mt-2 p-3 rounded-lg border-2" style={{ background: 'rgba(59, 130, 246, 0.05)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
+                      <p className="text-sm font-medium" style={{ color: '#3b82f6' }}>
+                        <strong>Additional Information Needed:</strong> {selectedLeave.rejectionReason}
+                      </p>
+                    </div>
+                  )}
+                  {selectedLeave.status !== 'more_info' && selectedLeave.rejectionReason && (
                     <div className="mt-2 p-3 rounded-lg border-2" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
                       <p className="text-sm font-medium" style={{ color: '#ef4444' }}>
                         <strong>Rejection Reason:</strong> {selectedLeave.rejectionReason}

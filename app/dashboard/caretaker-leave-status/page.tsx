@@ -105,16 +105,40 @@ export default function CaretakerLeaveStatusPage() {
   };
 
   const LeaveCard = ({ leave }: { leave: any }) => {
+    // Get solid color for status badge
+    const getStatusSolidColor = (status: string) => {
+      switch (status) {
+        case 'Approved': return '#10b981'
+        case 'Rejected': return '#ef4444'
+        case 'Conditionally Approved': return '#f26918'
+        default: return '#eab308' // Pending
+      }
+    }
+    
     return (
-      <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden mb-4 hover:shadow-lg transition-all">
+      <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden mb-4 hover:shadow-lg transition-all relative">
+        {/* Status Badge - Top Right Corner */}
+        <span 
+          className="absolute -top-3 -right-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-extrabold uppercase tracking-wider z-10 transform rotate-3"
+          style={{ 
+            background: getStatusSolidColor(leave.status),
+            color: 'white',
+            borderColor: 'white',
+            borderWidth: '3px',
+            borderStyle: 'solid',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          {leave.status}
+        </span>
+
         <div className="p-4 sm:p-5 md:p-6 border-b-2 border-gray-100">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex-1">
+            <div className="flex-1 pr-20">
               <h3 className="text-base sm:text-lg md:text-xl font-bold" style={{ color: '#014b89' }}>
                 {leave.leaveType} Leave
               </h3>
             </div>
-            {getStatusBadge(leave.status)}
           </div>
         </div>
 
