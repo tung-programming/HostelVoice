@@ -49,16 +49,15 @@ export default function ManagementPage() {
 
       const hostelData = (hostelsRes.data || []).map((h: any) => ({
         name: h.name,
-        student_count: h.studentCount || 0
+        student_count: h.student_count || 0
       }))
       setHostels(hostelData)
 
       const caretakerData = (caretakersRes.data || []) as unknown as Caretaker[]
       setCaretakers(caretakerData)
 
-      // Calculate stats from dashboard data
-      const dashboard = dashboardRes.data
-      const totalStudents = dashboard?.totalStudents || 0
+      // Calculate stats from hostel data (accurate student count)
+      const totalStudents = hostelData.reduce((sum, h) => sum + h.student_count, 0)
       const totalHostels = hostelData.length
 
       setStats({

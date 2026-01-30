@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -34,10 +33,8 @@ import {
 } from "@/components/ui/dialog";
 import {
   Edit,
-  Save,
   Upload,
   Download,
-  Copy,
   FileText,
   MessageSquare,
   Star,
@@ -46,102 +43,34 @@ import {
   TrendingUp,
   TrendingDown,
   Activity,
-  Users,
-  Calendar,
   BarChart3,
   CheckCircle2,
   Reply,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+import {
+  getCurrentWeeklyMenu,
+  createWeeklyMenu,
+  uploadMenuImage,
+  getFeedbacks,
+  getFeedbackStats,
+  getLowRatedMeals,
+  markFeedbackReviewed,
+  type WeeklyMenuWithMeals,
+  type MessFeedback,
+  type FeedbackStats,
+  type FeedbackFilters,
+} from "@/lib/mess-api";
 
-// Dummy data for feedbacks
-const dummyFeedbacks = [
-  {
-    id: 1,
-    date: "2026-01-28",
-    meal: "Lunch",
-    studentName: "Rahul Kumar",
-    rating: 4,
-    tasteRating: 4,
-    quantityRating: 4,
-    qualityRating: 4,
-    cleanlinessRating: 5,
-    comments: "Food was good, could use more variety",
-    hasPhotos: false,
-    reviewed: false,
-  },
-  {
-    id: 2,
-    date: "2026-01-28",
-    meal: "Breakfast",
-    studentName: "Priya Sharma",
-    rating: 2,
-    tasteRating: 2,
-    quantityRating: 3,
-    qualityRating: 2,
-    cleanlinessRating: 3,
-    comments: "Idli was cold and sambhar was too watery",
-    hasPhotos: true,
-    reviewed: false,
-  },
-  {
-    id: 3,
-    date: "2026-01-27",
-    meal: "Dinner",
-    studentName: "Amit Patel",
-    rating: 5,
-    tasteRating: 5,
-    quantityRating: 5,
-    qualityRating: 5,
-    cleanlinessRating: 5,
-    comments: "Excellent food quality, really enjoyed it!",
-    hasPhotos: false,
-    reviewed: true,
-  },
-  {
-    id: 4,
-    date: "2026-01-27",
-    meal: "Snacks",
-    studentName: "Sneha Singh",
-    rating: 3,
-    tasteRating: 3,
-    quantityRating: 2,
-    qualityRating: 3,
-    cleanlinessRating: 4,
-    comments: "Quantity was less, taste was okay",
-    hasPhotos: false,
-    reviewed: false,
-  },
-  {
-    id: 5,
-    date: "2026-01-26",
-    meal: "Lunch",
-    studentName: "Vikram Reddy",
-    rating: 1,
-    tasteRating: 1,
-    quantityRating: 2,
-    qualityRating: 1,
-    cleanlinessRating: 2,
-    comments: "Food quality was very poor, found hair in the curry",
-    hasPhotos: true,
-    reviewed: false,
-  },
-];
-
-// Dummy menu data
-const currentWeekMenu = {
-  monday: {
-    breakfast: ["Idli", "Sambar", "Chutney"],
-    lunch: ["Rice", "Dal", "Vegetable Curry", "Roti"],
-    snacks: ["Samosa", "Tea"],
-    dinner: ["Chapati", "Paneer Curry", "Dal"],
-  },
-  tuesday: {
-    breakfast: ["Poha", "Jalebi"],
-    lunch: ["Rice", "Rajma", "Mix Veg", "Roti"],
-    snacks: ["Bread Pakora", "Tea"],
-    dinner: ["Rice", "Dal Makhani", "Roti"],
-  },
+type LowRatedMeal = {
+  meal_type: string;
+  date: string;
+  avg_rating: number;
+  comments: string[];
 };
 
 export default function MessManagementPage() {
@@ -151,7 +80,28 @@ export default function MessManagementPage() {
   const [filterRating, setFilterRating] = useState("all");
   const [filterDate, setFilterDate] = useState("all");
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [hasExistingMenu, setHasExistingMenu] = useState(true); // Set to false if no menu exists
+  
+  // Feedback state
+  const [feedbacks, setFeedbacks] = useState<MessFeedback[]>([]);
+  const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(true);
+  const [feedbackStats, setFeedbackStats] = useState<FeedbackStats | null>(null);
+  const [lowRatedMeals, setLowRatedMeals] = useState<LowRatedMeal[]>([]);
+  const [totalFeedbacks, setTotalFeedbacks] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Filters
+  const [filterMeal, setFilterMeal] = useState<string>("all");
+  const [filterRating, setFilterRating] = useState<string>("all");
+  const [showPhotosOnly, setShowPhotosOnly] = useState(false);
+  
+  // Reply dialog
+  const [replyText, setReplyText] = useState("");
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  
+  // Photo signed URLs state
+  const [photoSignedUrls, setPhotoSignedUrls] = useState<Record<string, string>>({});
+  const [loadingPhotoUrls, setLoadingPhotoUrls] = useState(false);
   
   // Weekly menu upload state
   const [weeklyMenuData, setWeeklyMenuData] = useState({
@@ -164,10 +114,11 @@ export default function MessManagementPage() {
     sunday: { breakfast: "", lunch: "", snacks: "", dinner: "" },
   });
   const [menuPhoto, setMenuPhoto] = useState<File | null>(null);
-  const [selectedWeekDate, setSelectedWeekDate] = useState(new Date());
+  const [isUploadingMenu, setIsUploadingMenu] = useState(false);
 
   // Get user role from auth context
   const userRole = user?.role as "admin" | "caretaker" | undefined;
+  const hostelName = user?.hostelName || "";
 
   const filteredFeedbacks = dummyFeedbacks.filter((feedback) => {
     if (filterMeal !== "all" && feedback.meal.toLowerCase() !== filterMeal) return false;
@@ -175,11 +126,68 @@ export default function MessManagementPage() {
     return true;
   });
 
-  const averageRating = (
-    filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / filteredFeedbacks.length
-  ).toFixed(1);
+  // Reload feedbacks when filters change
+  useEffect(() => {
+    if (userRole !== 'admin' && !hostelName) return;
+    loadFeedbacks();
+  }, [filterMeal, filterRating, showPhotosOnly, currentPage, userRole]);
 
-  const handleUploadWeeklyMenu = () => {
+  async function loadMenu() {
+    setIsLoadingMenu(true);
+    try {
+      const hostelFilter = userRole === 'admin' ? null : hostelName;
+      const menu = await getCurrentWeeklyMenu(hostelFilter);
+      setWeeklyMenu(menu);
+      setShowUploadForm(!menu);
+    } catch (error) {
+      console.error('[MessManagement] Error loading menu:', error);
+      toast.error("Failed to load menu");
+    } finally {
+      setIsLoadingMenu(false);
+    }
+  }
+
+  async function loadFeedbacks() {
+    setIsLoadingFeedbacks(true);
+    try {
+      const filters: FeedbackFilters = {};
+      if (filterMeal !== "all") {
+        filters.meal_type = filterMeal as 'breakfast' | 'lunch' | 'snacks' | 'dinner';
+      }
+      if (filterRating !== "all") {
+        filters.rating = parseInt(filterRating);
+      }
+      if (showPhotosOnly) {
+        filters.has_photos = true;
+      }
+      
+      const hostelFilter = userRole === 'admin' ? null : hostelName;
+      const result = await getFeedbacks(hostelFilter, filters, currentPage, 20);
+      setFeedbacks(result.data);
+      setTotalFeedbacks(result.total);
+    } catch (error) {
+      console.error('[MessManagement] Error loading feedbacks:', error);
+      toast.error("Failed to load feedbacks");
+    } finally {
+      setIsLoadingFeedbacks(false);
+    }
+  }
+
+  async function loadAnalytics() {
+    try {
+      const hostelFilter = userRole === 'admin' ? null : hostelName;
+      const [stats, lowRated] = await Promise.all([
+        getFeedbackStats(hostelFilter, 30),
+        getLowRatedMeals(hostelFilter, 30, 5)
+      ]);
+      setFeedbackStats(stats);
+      setLowRatedMeals(lowRated);
+    } catch (error) {
+      console.error('[MessManagement] Error loading analytics:', error);
+    }
+  }
+
+  const handleUploadWeeklyMenu = async () => {
     // Validate that all fields are filled
     const allDaysFilled = Object.values(weeklyMenuData).every((day) =>
       Object.values(day).every((meal) => meal.trim() !== "")
@@ -195,10 +203,55 @@ export default function MessManagementPage() {
       return;
     }
 
-    // In real implementation, this would upload to backend
-    toast.success("Weekly menu uploaded successfully!");
-    setShowUploadForm(false);
-    setHasExistingMenu(true);
+    setIsUploadingMenu(true);
+    try {
+      // Upload the menu image first
+      const imageResult = await uploadMenuImage(menuPhoto, hostelName);
+      if (!imageResult.url) {
+        throw new Error(imageResult.error || "Failed to upload menu image");
+      }
+
+      // Parse the menu data into Record<string, DayMenu> format
+      const meals: Record<string, { breakfast: string[]; lunch: string[]; snacks: string[]; dinner: string[] }> = {};
+      
+      Object.entries(weeklyMenuData).forEach(([day, dayMeals]) => {
+        meals[day] = {
+          breakfast: dayMeals.breakfast.split(',').map(item => item.trim()).filter(Boolean),
+          lunch: dayMeals.lunch.split(',').map(item => item.trim()).filter(Boolean),
+          snacks: dayMeals.snacks.split(',').map(item => item.trim()).filter(Boolean),
+          dinner: dayMeals.dinner.split(',').map(item => item.trim()).filter(Boolean),
+        };
+      });
+
+      // Get week start date (Monday of current week)
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + mondayOffset);
+      const weekStartDate = monday.toISOString().split('T')[0];
+
+      // Create the weekly menu
+      const result = await createWeeklyMenu({
+        hostel_name: hostelName,
+        week_start_date: weekStartDate,
+        menu_image_url: imageResult.url,
+        meals
+      });
+
+      if (result.success) {
+        toast.success("Weekly menu uploaded successfully!");
+        setShowUploadForm(false);
+        loadMenu(); // Reload menu
+      } else {
+        toast.error(result.error || "Failed to create menu");
+      }
+    } catch (error) {
+      console.error('[MessManagement] Error uploading menu:', error);
+      toast.error("Failed to upload menu");
+    } finally {
+      setIsUploadingMenu(false);
+    }
   };
 
   const handleUpdateMenu = (day: string, mealType: string, value: string) => {
@@ -226,11 +279,51 @@ export default function MessManagementPage() {
   };
 
   const handleExportFeedback = () => {
-    toast.success("Exporting feedback as Excel...");
+    // Generate CSV export
+    const headers = ['Date', 'Meal', 'Student', 'Overall', 'Taste', 'Quantity', 'Quality', 'Cleanliness', 'Comments', 'Status'];
+    const rows = feedbacks.map(f => [
+      new Date(f.created_at).toLocaleDateString(),
+      f.meal_type,
+      f.student?.full_name || 'Unknown',
+      f.overall_rating,
+      f.taste_rating || '-',
+      f.quantity_rating || '-',
+      f.quality_rating || '-',
+      f.cleanliness_rating || '-',
+      f.comments || '',
+      f.status
+    ]);
+    
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mess-feedback-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    toast.success("Feedback exported successfully!");
   };
 
-  const handleMarkReviewed = (id: number) => {
-    toast.success("Feedback marked as reviewed");
+  const handleMarkReviewed = async (id: string, reply?: string) => {
+    setIsSubmittingReply(true);
+    try {
+      const result = await markFeedbackReviewed(id, reply);
+      if (result.success) {
+        toast.success("Feedback marked as reviewed");
+        loadFeedbacks(); // Reload
+        setReplyText("");
+        setReplyingTo(null);
+      } else {
+        toast.error(result.error || "Failed to update feedback");
+      }
+    } catch (error) {
+      console.error('[MessManagement] Error marking reviewed:', error);
+      toast.error("Failed to update feedback");
+    } finally {
+      setIsSubmittingReply(false);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -247,6 +340,17 @@ export default function MessManagementPage() {
       </div>
     );
   };
+
+  // Calculate average rating from the actual feedback list being displayed
+  const averageRating = feedbacks.length > 0
+    ? (feedbacks.reduce((sum, f) => sum + f.overall_rating, 0) / feedbacks.length).toFixed(1)
+    : "0.0";
+  
+  const satisfactionPercent = feedbacks.length > 0
+    ? Math.round((parseFloat(averageRating) / 5) * 100)
+    : 0;
+  
+  const pendingCount = feedbacks.filter(f => f.status === 'pending').length;
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
@@ -325,7 +429,7 @@ export default function MessManagementPage() {
                     </div>
                   </div>
                   <div className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#014b89' }}>{averageRating}/5</div>
-                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">This month</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Last 30 days</p>
                 </div>
 
                 <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 hover:shadow-xl transition-all">
@@ -335,8 +439,8 @@ export default function MessManagementPage() {
                       <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: '#014b89' }} />
                     </div>
                   </div>
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#014b89' }}>{dummyFeedbacks.length}</div>
-                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">This week</p>
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#014b89' }}>{feedbackStats?.total_count || 0}</div>
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Last 30 days</p>
                 </div>
 
                 <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 hover:shadow-xl transition-all">
@@ -346,8 +450,8 @@ export default function MessManagementPage() {
                       <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: '#10b981' }} />
                     </div>
                   </div>
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#10b981' }}>78%</div>
-                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">+12% from last</p>
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#10b981' }}>{satisfactionPercent}%</div>
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Based on ratings</p>
                 </div>
 
                 <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 hover:shadow-xl transition-all">
@@ -358,7 +462,7 @@ export default function MessManagementPage() {
                     </div>
                   </div>
                   <div className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#f26918' }}>
-                    {dummyFeedbacks.filter((f) => !f.reviewed).length}
+                    {pendingCount}
                   </div>
                   <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Needs attention</p>
                 </div>
@@ -378,61 +482,36 @@ export default function MessManagementPage() {
                 </div>
               </div>
 
-              {/* Common Complaints & Low-Rated Meals */}
-              <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
-                <div className="bg-white border-2 border-gray-100 rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden">
-                  <div className="p-4 sm:p-6 md:p-8">
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2" style={{ color: '#014b89' }}>
-                      Most Common Complaints
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Based on feedback comments</p>
-                    <div className="space-y-2 sm:space-y-3">
-                      {[
-                        { label: "Cold food", count: 15 },
-                        { label: "Less quantity", count: 12 },
-                        { label: "Poor quality", count: 8 },
-                        { label: "Limited variety", count: 5 },
-                      ].map((item) => (
-                        <div key={item.label} className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gray-50">
-                          <span className="text-sm sm:text-base font-medium text-gray-900">{item.label}</span>
-                          <Badge 
-                            className="text-xs font-bold px-2 sm:px-3 py-1 border-2"
-                            style={{ 
-                              background: item.count > 10 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(107, 114, 128, 0.1)',
-                              color: item.count > 10 ? '#ef4444' : '#6b7280',
-                              borderColor: item.count > 10 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(107, 114, 128, 0.3)'
-                            }}
-                          >
-                            {item.count}
-                          </Badge>
-                        </div>
-                      ))}
+              {/* Low-Rated Meals */}
+              <div className="bg-white border-2 border-gray-100 rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden">
+                <div className="p-4 sm:p-6 md:p-8">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2" style={{ color: '#014b89' }}>
+                    Low-Rated Meals
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Meals that need improvement (under 3.5 stars)</p>
+                  {lowRatedMeals.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-green-500" />
+                      <p className="font-medium">Great news! No low-rated meals found.</p>
                     </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border-2 border-gray-100 rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden">
-                  <div className="p-4 sm:p-6 md:p-8">
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2" style={{ color: '#014b89' }}>
-                      Low-Rated Meals
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">Meals that need improvement</p>
+                  ) : (
                     <div className="space-y-2 sm:space-y-3">
-                      {[
-                        { label: "Breakfast - Idli", rating: 2.1, color: '#ef4444' },
-                        { label: "Lunch - Curry", rating: 2.5, color: '#ef4444' },
-                        { label: "Snacks - Samosa", rating: 3.2, color: '#f26918' },
-                      ].map((item) => (
-                        <div key={item.label} className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gray-50">
-                          <span className="text-sm sm:text-base font-medium text-gray-900">{item.label}</span>
+                      {lowRatedMeals.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-gray-50">
+                          <div>
+                            <span className="text-sm sm:text-base font-medium text-gray-900 capitalize">{item.meal_type}</span>
+                            <span className="text-xs text-gray-500 ml-2">{new Date(item.date).toLocaleDateString()}</span>
+                          </div>
                           <div className="flex items-center gap-1 sm:gap-2">
-                            <span className="text-base sm:text-lg font-bold" style={{ color: item.color }}>{item.rating}</span>
-                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: item.color }} />
+                            <span className="text-base sm:text-lg font-bold" style={{ color: item.avg_rating < 2 ? '#ef4444' : '#f26918' }}>
+                              {item.avg_rating.toFixed(1)}
+                            </span>
+                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: item.avg_rating < 2 ? '#ef4444' : '#f26918' }} />
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -446,6 +525,7 @@ export default function MessManagementPage() {
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                     <Button 
                       variant="outline"
+                      onClick={handleExportFeedback}
                       className="border-2 font-semibold h-10 sm:h-11 text-xs sm:text-sm"
                       style={{ borderColor: '#014b89', color: '#014b89' }}
                     >
@@ -470,10 +550,15 @@ export default function MessManagementPage() {
 
           {/* Menu Tab - Mobile Optimized */}
           <TabsContent value="menu" className="space-y-4 sm:space-y-6 mt-0">
-            {userRole === "caretaker" ? (
+            {isLoadingMenu ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#014b89' }} />
+                <span className="ml-3 text-gray-600">Loading menu...</span>
+              </div>
+            ) : userRole === "caretaker" ? (
               /* Caretaker View */
               <div className="space-y-4 sm:space-y-6">
-                {!hasExistingMenu || showUploadForm ? (
+                {!weeklyMenu || showUploadForm ? (
                   /* Upload New Menu Form */
                   <div className="bg-white border-2 border-gray-100 rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden">
                     <div className="p-4 sm:p-6 md:p-8">
@@ -486,7 +571,7 @@ export default function MessManagementPage() {
                             Upload complete week's menu with all meals
                           </p>
                         </div>
-                        {showUploadForm && hasExistingMenu && (
+                        {showUploadForm && weeklyMenu && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -561,11 +646,21 @@ export default function MessManagementPage() {
                       <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
                         <Button
                           onClick={handleUploadWeeklyMenu}
+                          disabled={isUploadingMenu}
                           className="text-white font-bold h-12 rounded-xl text-base px-8"
                           style={{ background: '#014b89' }}
                         >
-                          <Upload className="mr-2 h-5 w-5" />
-                          Upload Weekly Menu
+                          {isUploadingMenu ? (
+                            <>
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="mr-2 h-5 w-5" />
+                              Upload Weekly Menu
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -594,62 +689,79 @@ export default function MessManagementPage() {
                       </div>
 
                       {/* Current Menu Image */}
-                      <div className="mb-6 p-4 sm:p-6 rounded-xl border-2" style={{ background: 'rgba(242, 105, 24, 0.05)', borderColor: 'rgba(242, 105, 24, 0.2)' }}>
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-base sm:text-lg font-bold" style={{ color: '#f26918' }}>
-                            Menu Card Image
-                          </h3>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-2 font-semibold h-8 sm:h-9 text-xs sm:text-sm"
-                            style={{ borderColor: '#10b981', color: '#10b981' }}
-                          >
-                            <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            Download
-                          </Button>
+                      {weeklyMenu.menu_image_url && (
+                        <div className="mb-6 p-4 sm:p-6 rounded-xl border-2" style={{ background: 'rgba(242, 105, 24, 0.05)', borderColor: 'rgba(242, 105, 24, 0.2)' }}>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-base sm:text-lg font-bold" style={{ color: '#f26918' }}>
+                              Menu Card Image
+                            </h3>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => weeklyMenu.menu_image_url && window.open(weeklyMenu.menu_image_url, '_blank')}
+                              className="border-2 font-semibold h-8 sm:h-9 text-xs sm:text-sm"
+                              style={{ borderColor: '#10b981', color: '#10b981' }}
+                            >
+                              <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                              Download
+                            </Button>
+                          </div>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            Students can download this menu card from their dashboard
+                          </p>
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-600">
-                          Students can download this menu card from their dashboard
-                        </p>
-                      </div>
+                      )}
 
                       {/* Calendar View of Menu */}
                       <div className="space-y-4">
-                        {Object.entries(currentWeekMenu).map(([day, meals]) => (
-                          <div
-                            key={day}
-                            className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-shadow"
-                          >
-                            <div className="p-4 sm:p-5 border-b-2 border-gray-100 flex items-center justify-between">
-                              <h3 className="text-base sm:text-lg md:text-xl font-bold capitalize" style={{ color: '#014b89' }}>
-                                {day}
-                              </h3>
-                              <Badge className="text-xs font-bold px-3 py-1" style={{ background: 'rgba(1, 75, 137, 0.1)', color: '#014b89' }}>
-                                {day === new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() ? "Today" : "Scheduled"}
-                              </Badge>
-                            </div>
-                            <div className="p-4 sm:p-5 md:p-6">
-                              <div className="grid sm:grid-cols-2 gap-4">
-                                {Object.entries(meals).map(([mealType, items]) => (
-                                  <div key={mealType} className="bg-gray-50 rounded-xl p-4">
-                                    <h4 className="font-bold capitalize mb-3 text-sm sm:text-base" style={{ color: '#f26918' }}>
-                                      {mealType}
-                                    </h4>
-                                    <ul className="space-y-1.5">
-                                      {items.map((item, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm">
-                                          <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#014b89' }} />
-                                          <span className="text-gray-700 font-medium">{item}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                ))}
+                        {(['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const).map((day) => {
+                          const dayMenu = weeklyMenu.meals[day];
+                          if (!dayMenu) return null;
+                          
+                          const hasItems = dayMenu.breakfast.length > 0 || dayMenu.lunch.length > 0 || 
+                                          dayMenu.snacks.length > 0 || dayMenu.dinner.length > 0;
+                          if (!hasItems) return null;
+
+                          return (
+                            <div
+                              key={day}
+                              className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-shadow"
+                            >
+                              <div className="p-4 sm:p-5 border-b-2 border-gray-100 flex items-center justify-between">
+                                <h3 className="text-base sm:text-lg md:text-xl font-bold capitalize" style={{ color: '#014b89' }}>
+                                  {day}
+                                </h3>
+                                <Badge className="text-xs font-bold px-3 py-1" style={{ background: 'rgba(1, 75, 137, 0.1)', color: '#014b89' }}>
+                                  {day === new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() ? "Today" : "Scheduled"}
+                                </Badge>
+                              </div>
+                              <div className="p-4 sm:p-5 md:p-6">
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                  {(['breakfast', 'lunch', 'snacks', 'dinner'] as const).map((mealType) => {
+                                    const items = dayMenu[mealType];
+                                    if (!items || items.length === 0) return null;
+                                    
+                                    return (
+                                      <div key={mealType} className="bg-gray-50 rounded-xl p-4">
+                                        <h4 className="font-bold capitalize mb-3 text-sm sm:text-base" style={{ color: '#f26918' }}>
+                                          {mealType}
+                                        </h4>
+                                        <ul className="space-y-1.5">
+                                          {items.map((item, idx) => (
+                                            <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm">
+                                              <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#014b89' }} />
+                                              <span className="text-gray-700 font-medium">{item}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Menu Info Footer */}
@@ -657,20 +769,21 @@ export default function MessManagementPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <div>
                             <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                              <strong>Last Updated:</strong> January 28, 2026 at 10:30 AM
+                              <strong>Last Updated:</strong> {new Date(weeklyMenu.updated_at).toLocaleString()}
                             </p>
                             <p className="text-xs sm:text-sm font-medium text-gray-700">
-                              <strong>Week Period:</strong> Jan 27 - Feb 2, 2026
+                              <strong>Week Period:</strong> {new Date(weeklyMenu.week_start_date).toLocaleDateString()} - {new Date(weeklyMenu.week_end_date).toLocaleDateString()}
                             </p>
                           </div>
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={handleCreateNewMenu}
                             className="border-2 font-semibold h-9 text-xs sm:text-sm"
                             style={{ borderColor: '#014b89', color: '#014b89' }}
                           >
                             <Edit className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            Quick Edit
+                            Create New Menu
                           </Button>
                         </div>
                       </div>
@@ -691,54 +804,88 @@ export default function MessManagementPage() {
                         View current week's menu and caretaker updates
                       </p>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadMenu}
+                      className="border-2 font-semibold h-9 text-xs sm:text-sm"
+                      style={{ borderColor: '#014b89', color: '#014b89' }}
+                    >
+                      <RefreshCw className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      Refresh
+                    </Button>
                   </div>
 
-                  {/* Menu Cards */}
-                  <div className="space-y-4">
-                    {Object.entries(currentWeekMenu).map(([day, meals]) => (
-                      <div
-                        key={day}
-                        className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden"
-                      >
-                        <div className="p-4 sm:p-5 md:p-6 border-b-2 border-gray-100">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-base sm:text-lg md:text-xl font-bold capitalize" style={{ color: '#014b89' }}>
-                              {day}
-                            </h3>
-                          </div>
-                        </div>
-                        <div className="p-4 sm:p-5 md:p-6">
-                          <div className="grid sm:grid-cols-2 gap-4">
-                            {Object.entries(meals).map(([mealType, items]) => (
-                              <div key={mealType}>
-                                <h4 className="font-bold capitalize mb-2 text-sm sm:text-base" style={{ color: '#f26918' }}>
-                                  {mealType}
-                                </h4>
-                                <ul className="space-y-1">
-                                  {items.map((item, idx) => (
-                                    <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm">
-                                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#014b89' }} />
-                                      <span className="text-gray-700 font-medium">{item}</span>
-                                    </li>
-                                  ))}
-                                </ul>
+                  {!weeklyMenu ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                      <p className="font-medium">No menu uploaded for this week</p>
+                      <p className="text-sm mt-1">Caretaker needs to upload the weekly menu</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Menu Cards */}
+                      <div className="space-y-4">
+                        {(['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const).map((day) => {
+                          const dayMenu = weeklyMenu.meals[day];
+                          if (!dayMenu) return null;
+                          
+                          const hasItems = dayMenu.breakfast.length > 0 || dayMenu.lunch.length > 0 || 
+                                          dayMenu.snacks.length > 0 || dayMenu.dinner.length > 0;
+                          if (!hasItems) return null;
+
+                          return (
+                            <div
+                              key={day}
+                              className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden"
+                            >
+                              <div className="p-4 sm:p-5 md:p-6 border-b-2 border-gray-100">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="text-base sm:text-lg md:text-xl font-bold capitalize" style={{ color: '#014b89' }}>
+                                    {day}
+                                  </h3>
+                                </div>
                               </div>
-                            ))}
-                          </div>
-                        </div>
+                              <div className="p-4 sm:p-5 md:p-6">
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                  {(['breakfast', 'lunch', 'snacks', 'dinner'] as const).map((mealType) => {
+                                    const items = dayMenu[mealType];
+                                    if (!items || items.length === 0) return null;
+                                    
+                                    return (
+                                      <div key={mealType}>
+                                        <h4 className="font-bold capitalize mb-2 text-sm sm:text-base" style={{ color: '#f26918' }}>
+                                          {mealType}
+                                        </h4>
+                                        <ul className="space-y-1">
+                                          {items.map((item, idx) => (
+                                            <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm">
+                                              <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: '#014b89' }} />
+                                              <span className="text-gray-700 font-medium">{item}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Admin Info */}
-                  <div className="mt-6 p-4 sm:p-5 rounded-xl border-2 border-gray-200" style={{ background: 'rgba(1, 75, 137, 0.05)' }}>
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      <strong>Last Updated:</strong> January 28, 2026 at 10:30 AM
-                    </p>
-                    <p className="text-xs sm:text-sm font-medium text-gray-700">
-                      <strong>Updated By:</strong> Caretaker - Rajesh Kumar
-                    </p>
-                  </div>
+                      {/* Admin Info */}
+                      <div className="mt-6 p-4 sm:p-5 rounded-xl border-2 border-gray-200" style={{ background: 'rgba(1, 75, 137, 0.05)' }}>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                          <strong>Last Updated:</strong> {new Date(weeklyMenu.updated_at).toLocaleString()}
+                        </p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700">
+                          <strong>Week Period:</strong> {new Date(weeklyMenu.week_start_date).toLocaleDateString()} - {new Date(weeklyMenu.week_end_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -758,17 +905,29 @@ export default function MessManagementPage() {
                       View and manage all student feedback submissions
                     </p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleExportFeedback}
-                    className="border-2 font-semibold h-9 sm:h-10 text-xs sm:text-sm"
-                    style={{ borderColor: '#10b981', color: '#10b981' }}
-                  >
-                    <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Export to Excel</span>
-                    <span className="sm:hidden">Export</span>
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadFeedbacks}
+                      className="border-2 font-semibold h-9 sm:h-10 text-xs sm:text-sm"
+                      style={{ borderColor: '#014b89', color: '#014b89' }}
+                    >
+                      <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleExportFeedback}
+                      disabled={feedbacks.length === 0}
+                      className="border-2 font-semibold h-9 sm:h-10 text-xs sm:text-sm"
+                      style={{ borderColor: '#10b981', color: '#10b981' }}
+                    >
+                      <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Export CSV</span>
+                      <span className="sm:hidden">Export</span>
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Filters - Mobile Optimized */}
@@ -819,57 +978,73 @@ export default function MessManagementPage() {
                     </div>
                     <div className="sm:text-right">
                       <p className="text-xs sm:text-sm text-gray-600 font-semibold mb-2">Total Feedbacks</p>
-                      <span className="text-3xl sm:text-4xl font-bold" style={{ color: '#f26918' }}>{filteredFeedbacks.length}</span>
+                      <span className="text-3xl sm:text-4xl font-bold" style={{ color: '#f26918' }}>{totalFeedbacks}</span>
                     </div>
                   </div>
                 </div>
 
+                {/* Loading State */}
+                {isLoadingFeedbacks && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#014b89' }} />
+                    <span className="ml-3 text-gray-600">Loading feedbacks...</span>
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!isLoadingFeedbacks && feedbacks.length === 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                    <p className="font-medium">No feedbacks found</p>
+                    <p className="text-sm mt-1">Try adjusting your filters</p>
+                  </div>
+                )}
+
                 {/* Mobile Card View */}
-                <div className="block lg:hidden space-y-3">
-                  {filteredFeedbacks.map((feedback) => (
-                    <div
-                      key={feedback.id}
-                      className="border-2 rounded-xl p-4"
-                      style={{ 
-                        borderColor: feedback.rating <= 2 ? 'rgba(239, 68, 68, 0.3)' : '#e5e7eb',
-                        background: feedback.rating <= 2 ? 'rgba(239, 68, 68, 0.05)' : 'white'
-                      }}
-                    >
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-gray-900 text-sm mb-1">{feedback.studentName}</h3>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge 
-                              className="text-[10px] font-bold px-2 py-0.5 border-2"
-                              style={{ 
-                                background: 'rgba(1, 75, 137, 0.1)',
-                                color: '#014b89',
-                                borderColor: 'rgba(1, 75, 137, 0.3)'
-                              }}
-                            >
-                              {feedback.meal}
-                            </Badge>
-                            <span className="text-xs text-gray-600">{feedback.date}</span>
+                {!isLoadingFeedbacks && feedbacks.length > 0 && (
+                  <div className="block lg:hidden space-y-3">
+                    {feedbacks.map((feedback) => (
+                      <div
+                        key={feedback.id}
+                        className="border-2 rounded-xl p-4"
+                        style={{ 
+                          borderColor: feedback.overall_rating <= 2 ? 'rgba(239, 68, 68, 0.3)' : '#e5e7eb',
+                          background: feedback.overall_rating <= 2 ? 'rgba(239, 68, 68, 0.05)' : 'white'
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-gray-900 text-sm mb-1">{feedback.student?.full_name || 'Unknown'}</h3>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge 
+                                className="text-[10px] font-bold px-2 py-0.5 border-2 capitalize"
+                                style={{ 
+                                  background: 'rgba(1, 75, 137, 0.1)',
+                                  color: '#014b89',
+                                  borderColor: 'rgba(1, 75, 137, 0.3)'
+                                }}
+                              >
+                                {feedback.meal_type}
+                              </Badge>
+                              <span className="text-xs text-gray-600">{new Date(feedback.created_at).toLocaleDateString()}</span>
+                            </div>
                           </div>
+                          <Badge
+                            className="text-[10px] font-bold px-2 py-1 border-2 shrink-0"
+                            style={
+                              feedback.status === 'reviewed'
+                                ? { background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }
+                                : { background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }
+                            }
+                          >
+                            {feedback.status === 'reviewed' ? "Done" : "Pending"}
+                          </Badge>
                         </div>
-                        <Badge
-                          className="text-[10px] font-bold px-2 py-1 border-2 shrink-0"
-                          style={
-                            feedback.reviewed
-                              ? { background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }
-                              : { background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }
-                          }
-                        >
-                          {feedback.reviewed ? "Done" : "Pending"}
-                        </Badge>
-                      </div>
 
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg font-bold" style={{ color: '#014b89' }}>{feedback.rating}</span>
-                        {renderStars(feedback.rating)}
-                      </div>
-
-                      <p className="text-xs text-gray-700 mb-3 line-clamp-2">{feedback.comments}</p>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-lg font-bold" style={{ color: '#014b89' }}>{feedback.overall_rating}</span>
+                          {renderStars(feedback.overall_rating)}
+                        </div>
 
                       <div className="flex items-center gap-2">
                         {!feedback.reviewed && (
@@ -889,10 +1064,13 @@ export default function MessManagementPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="border-2 h-8 px-3"
-                              style={{ borderColor: '#f26918', color: '#f26918' }}
+                              onClick={() => handleMarkReviewed(feedback.id)}
+                              disabled={isSubmittingReply}
+                              className="flex-1 border-2 font-semibold h-8 text-xs"
+                              style={{ borderColor: '#10b981', color: '#10b981' }}
                             >
-                              <Reply className="h-3 w-3" />
+                              <CheckCircle2 className="mr-1 h-3 w-3" />
+                              Mark Reviewed
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="w-[calc(100%-2rem)] max-w-lg mx-auto">
@@ -992,56 +1170,270 @@ export default function MessManagementPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleMarkReviewed(feedback.id)}
                                   className="border-2 h-8 px-3"
-                                  style={{ borderColor: '#10b981', color: '#10b981' }}
+                                  style={{ borderColor: '#014b89', color: '#014b89' }}
                                 >
-                                  <CheckCircle2 className="h-4 w-4" />
+                                  <ImageIcon className="h-3 w-3" />
                                 </Button>
-                              )}
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    className="border-2 h-8 px-3"
-                                    style={{ borderColor: '#f26918', color: '#f26918' }}
-                                  >
-                                    <Reply className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Reply to Feedback</DialogTitle>
-                                    <DialogDescription>
-                                      Send a response to {feedback.studentName}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div>
-                                      <Label>Your Reply</Label>
-                                      <Textarea
-                                        placeholder="Type your response..."
-                                        rows={4}
-                                        className="border-2 border-gray-200 rounded-xl mt-2"
-                                      />
-                                    </div>
-                                    <Button 
-                                      className="w-full text-white font-bold h-11 rounded-xl"
-                                      style={{ background: '#014b89' }}
-                                    >
-                                      Send Reply
-                                    </Button>
+                              </DialogTrigger>
+                              <DialogContent className="w-[calc(100%-2rem)] max-w-2xl mx-auto">
+                                <DialogHeader>
+                                  <DialogTitle className="text-base">Feedback Photos</DialogTitle>
+                                </DialogHeader>
+                                {loadingPhotoUrls ? (
+                                  <div className="flex items-center justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin" style={{ color: '#014b89' }} />
+                                    <span className="ml-2 text-sm text-gray-600">Loading photos...</span>
                                   </div>
-                                </DialogContent>
-                              </Dialog>
-                            </div>
-                          </TableCell>
+                                ) : (
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {feedback.photos.map((photo, idx) => {
+                                      const signedUrl = photo.photo_url ? photoSignedUrls[photo.photo_url] : null;
+                                      return signedUrl ? (
+                                        <img
+                                          key={idx}
+                                          src={signedUrl}
+                                          alt={`Feedback photo ${idx + 1}`}
+                                          className="w-full h-auto rounded-lg"
+                                        />
+                                      ) : (
+                                        <div key={idx} className="flex items-center justify-center bg-gray-100 rounded-lg p-4">
+                                          <AlertCircle className="h-6 w-6 text-gray-400" />
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setReplyingTo(feedback.id)}
+                                className="border-2 h-8 px-3"
+                                style={{ borderColor: '#f26918', color: '#f26918' }}
+                              >
+                                <Reply className="h-3 w-3" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="w-[calc(100%-2rem)] max-w-lg mx-auto">
+                              <DialogHeader>
+                                <DialogTitle className="text-base">Reply to Feedback</DialogTitle>
+                                <DialogDescription className="text-xs">
+                                  Send a response to {feedback.student?.full_name || 'student'}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label className="text-sm font-bold">Your Reply</Label>
+                                  <Textarea
+                                    placeholder="Type your response..."
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                    rows={4}
+                                    className="border-2 border-gray-200 rounded-xl text-sm mt-2"
+                                  />
+                                </div>
+                                <Button 
+                                  onClick={() => handleMarkReviewed(feedback.id, replyText)}
+                                  disabled={isSubmittingReply}
+                                  className="w-full text-white font-bold h-10 rounded-xl text-sm"
+                                  style={{ background: '#014b89' }}
+                                >
+                                  {isSubmittingReply ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Sending...
+                                    </>
+                                  ) : (
+                                    "Send Reply"
+                                  )}
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Desktop Table View */}
+                {!isLoadingFeedbacks && feedbacks.length > 0 && (
+                  <div className="hidden lg:block border-2 border-gray-200 rounded-xl overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b-2 border-gray-200">
+                          <TableHead className="font-bold text-gray-600 text-xs uppercase">Date</TableHead>
+                          <TableHead className="font-bold text-gray-600 text-xs uppercase">Meal</TableHead>
+                          <TableHead className="font-bold text-gray-600 text-xs uppercase">Student</TableHead>
+                          <TableHead className="font-bold text-gray-600 text-xs uppercase">Rating</TableHead>
+                          <TableHead className="font-bold text-gray-600 text-xs uppercase">Comments</TableHead>
+                          <TableHead className="font-bold text-gray-600 text-xs uppercase">Photos</TableHead>
+                          <TableHead className="font-bold text-gray-600 text-xs uppercase">Status</TableHead>
+                          <TableHead className="font-bold text-gray-600 text-xs uppercase">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {feedbacks.map((feedback) => (
+                          <TableRow
+                            key={feedback.id}
+                            className="border-b border-gray-100 hover:bg-gray-50"
+                            style={{ background: feedback.overall_rating <= 2 ? 'rgba(239, 68, 68, 0.05)' : 'white' }}
+                          >
+                            <TableCell className="text-sm">{new Date(feedback.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Badge 
+                                className="text-xs font-bold px-2 py-1 border-2 capitalize"
+                                style={{ 
+                                  background: 'rgba(1, 75, 137, 0.1)',
+                                  color: '#014b89',
+                                  borderColor: 'rgba(1, 75, 137, 0.3)'
+                                }}
+                              >
+                                {feedback.meal_type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm font-semibold">{feedback.student?.full_name || 'Unknown'}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold" style={{ color: '#014b89' }}>{feedback.overall_rating}</span>
+                                {renderStars(feedback.overall_rating)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate text-sm">{feedback.comments || '-'}</TableCell>
+                            <TableCell>
+                              {feedback.photos && feedback.photos.length > 0 && (
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <ImageIcon className="h-4 w-4" style={{ color: '#014b89' }} />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-2xl">
+                                    <DialogHeader>
+                                      <DialogTitle>Feedback Photos</DialogTitle>
+                                    </DialogHeader>
+                                    {loadingPhotoUrls ? (
+                                      <div className="flex items-center justify-center py-8">
+                                        <Loader2 className="h-6 w-6 animate-spin" style={{ color: '#014b89' }} />
+                                        <span className="ml-2 text-sm text-gray-600">Loading photos...</span>
+                                      </div>
+                                    ) : (
+                                      <div className="grid grid-cols-2 gap-2">
+                                        {feedback.photos.map((photo, idx) => {
+                                          const signedUrl = photo.photo_url ? photoSignedUrls[photo.photo_url] : null;
+                                          return signedUrl ? (
+                                            <img
+                                              key={idx}
+                                              src={signedUrl}
+                                              alt={`Feedback photo ${idx + 1}`}
+                                              className="w-full h-auto rounded-lg"
+                                            />
+                                          ) : (
+                                            <div key={idx} className="flex items-center justify-center bg-gray-100 rounded-lg p-4">
+                                              <AlertCircle className="h-6 w-6 text-gray-400" />
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </DialogContent>
+                                </Dialog>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className="text-xs font-bold px-2 py-1 border-2"
+                                style={
+                                  feedback.status === 'reviewed'
+                                    ? { background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }
+                                    : { background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }
+                                }
+                              >
+                                {feedback.status === 'reviewed' ? (
+                                  <>
+                                    <CheckCircle2 className="mr-1 h-3 w-3 inline" />
+                                    Reviewed
+                                  </>
+                                ) : (
+                                  "Pending"
+                                )}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                {feedback.status !== 'reviewed' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleMarkReviewed(feedback.id)}
+                                    disabled={isSubmittingReply}
+                                    className="border-2 h-8 px-3"
+                                    style={{ borderColor: '#10b981', color: '#10b981' }}
+                                  >
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setReplyingTo(feedback.id)}
+                                      className="border-2 h-8 px-3"
+                                      style={{ borderColor: '#f26918', color: '#f26918' }}
+                                    >
+                                      <Reply className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Reply to Feedback</DialogTitle>
+                                      <DialogDescription>
+                                        Send a response to {feedback.student?.full_name || 'student'}
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label>Your Reply</Label>
+                                        <Textarea
+                                          placeholder="Type your response..."
+                                          value={replyText}
+                                          onChange={(e) => setReplyText(e.target.value)}
+                                          rows={4}
+                                          className="border-2 border-gray-200 rounded-xl mt-2"
+                                        />
+                                      </div>
+                                      <Button 
+                                        onClick={() => handleMarkReviewed(feedback.id, replyText)}
+                                        disabled={isSubmittingReply}
+                                        className="w-full text-white font-bold h-11 rounded-xl"
+                                        style={{ background: '#014b89' }}
+                                      >
+                                        {isSubmittingReply ? (
+                                          <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Sending...
+                                          </>
+                                        ) : (
+                                          "Send Reply"
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </div>
             </div>
 

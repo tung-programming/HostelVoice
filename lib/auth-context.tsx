@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -50,134 +50,162 @@ export interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Helper to build User object from profile data
+function buildUserFromProfile(profile: any): User {
+  return {
+    id: profile.id,
+    email: profile.email,
+    name: profile.full_name || 'User',
+    role: profile.role,
+    hostelName: profile.hostel_name || 'N/A',
+    roomNumber: profile.room_number,
+    studentId: profile.student_id,
+    caretakerId: profile.caretaker_id,
+    adminId: profile.admin_id,
+    phoneNumber: profile.phone_number,
+    department: profile.department,
+    approvalStatus: profile.approval_status,
+    rejectionReason: profile.rejection_reason,
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
+  
+  // WHY THIS REF EXISTS:
+  // Supabase fires SIGNED_IN on page reload (echoing the restored session).
+  // Without this flag, onAuthStateChange would race with initAuth(), causing:
+  // - Duplicate profile loads
+  // - Non-deterministic timing
+  // - isLoading stuck true (the Heisenbug)
+  //
+  // This ref tells onAuthStateChange: "ignore events until init is done"
+  // It does NOT gate or skip initialization - it gates the event listener.
+  const initCompleteRef = useRef(false)
 
-  // Initialize auth from Supabase
   useEffect(() => {
+    let mounted = true
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SINGLE DETERMINISTIC AUTH FLOW
+    // ═══════════════════════════════════════════════════════════════════
+    // This is the ONLY path that runs on mount/reload.
+    // It handles everything inline - no external functions that could race.
+    // The finally block ALWAYS runs, guaranteeing isLoading resolves.
+    // ═══════════════════════════════════════════════════════════════════
     const initAuth = async () => {
+      console.log('[AuthProvider] Initializing auth...')
+      
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        // Step 1: Get current session (may exist from reload)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
-        if (session?.user) {
-          await loadUserProfile(session.user)
+        if (sessionError) {
+          console.error('[AuthProvider] Session error:', sessionError.message)
+          // Continue to finally - will clear loading with no user
+          return
         }
+        
+        if (!session?.user) {
+          console.log('[AuthProvider] No session found')
+          // Continue to finally - will clear loading with no user
+          return
+        }
+        
+        // Step 2: Session exists - load profile from database
+        console.log('[AuthProvider] Session found, loading profile for:', session.user.id)
+        
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        
+        if (profileError || !profile) {
+          console.error('[AuthProvider] Profile load failed:', profileError?.message || 'No profile')
+          // Session exists but profile doesn't - sign out for clean state
+          await supabase.auth.signOut()
+          // Continue to finally - will clear loading with no user
+          return
+        }
+        
+        // Step 3: Profile loaded - set user state
+        if (mounted) {
+          console.log('[AuthProvider] Profile loaded successfully')
+          setUser(buildUserFromProfile(profile))
+        }
+        
       } catch (error) {
-        console.error('Error loading session:', error)
+        console.error('[AuthProvider] Unexpected error during init:', error)
+        // Continue to finally - will clear loading
       } finally {
-        setIsLoading(false)
+        // ═══════════════════════════════════════════════════════════════
+        // CRITICAL: This block ALWAYS executes, no matter what.
+        // This is the ONLY place isLoading becomes false during init.
+        // No early returns, no guards, no races can prevent this.
+        // ═══════════════════════════════════════════════════════════════
+        if (mounted) {
+          console.log('[AuthProvider] Auth initialization complete')
+          initCompleteRef.current = true
+          setIsLoading(false)
+        }
       }
     }
 
+    // Start initialization
     initAuth()
 
-    // Listen for auth changes
+    // ═══════════════════════════════════════════════════════════════════
+    // EVENT LISTENER - Post-initialization only
+    // ═══════════════════════════════════════════════════════════════════
+    // This listener handles REAL auth events (new login, logout).
+    // It does NOT participate in initialization.
+    // Events during init are ignored (they're just echoes of restored session).
+    // ═══════════════════════════════════════════════════════════════════
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AuthProvider] Auth event:', event, '| Init complete:', initCompleteRef.current)
+      
+      // CRITICAL: Ignore ALL events until initialization is complete.
+      // On reload, Supabase fires SIGNED_IN as an echo of the restored session.
+      // If we process it, we race with initAuth() and cause the Heisenbug.
+      if (!initCompleteRef.current) {
+        console.log('[AuthProvider] Ignoring event during initialization')
+        return
+      }
+      
+      // Handle real post-init events
       if (event === 'SIGNED_IN' && session?.user) {
-        await loadUserProfile(session.user)
+        // This is a NEW login (user just signed in via login page)
+        console.log('[AuthProvider] New sign-in detected')
+        
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        
+        if (profile && mounted) {
+          setUser(buildUserFromProfile(profile))
+        }
       } else if (event === 'SIGNED_OUT') {
-        setUser(null)
+        console.log('[AuthProvider] User signed out')
+        if (mounted) {
+          setUser(null)
+        }
       }
     })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
   }, [])
 
-  const loadUserProfile = async (authUser: SupabaseUser, retryCount = 0) => {
-    try {
-      console.log('loadUserProfile called for:', authUser.id, 'retry:', retryCount)
-      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-      console.log('Has Anon Key:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-      
-      // Validate Supabase connection
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        console.error('Missing Supabase environment variables')
-        return
-      }
-      
-      // Query without artificial timeout - let Supabase handle its own timeouts
-      const startTime = Date.now()
-      const { data: profile, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
-      
-      const queryDuration = Date.now() - startTime
-      console.log(`Profile query completed in ${queryDuration}ms:`, { profile, error })
-
-      if (error) {
-        // Log all error details for debugging
-        console.error('Error loading user profile:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          statusCode: error.statusCode,
-          fullError: JSON.stringify(error)
-        })
-        
-        // Check if it's a network/connection error and retry
-        const isNetworkError = !error.code || error.message?.includes('fetch') || error.message?.includes('network')
-        if (isNetworkError && retryCount < 2) {
-          console.log(`Network error detected, retrying (attempt ${retryCount + 2}/3)...`)
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          return loadUserProfile(authUser, retryCount + 1)
-        }
-        
-        // If error is PGRST116 (not found) or after retries, continue without user
-        return
-      }
-
-      if (profile) {
-        const userData = {
-          id: profile.id,
-          email: profile.email,
-          name: profile.full_name,
-          role: profile.role,
-          hostelName: profile.hostel_name || 'N/A',
-          roomNumber: profile.room_number,
-          studentId: profile.student_id,
-          caretakerId: profile.caretaker_id,
-          adminId: profile.admin_id,
-          phoneNumber: profile.phone_number,
-          department: profile.department,
-          approvalStatus: profile.approval_status,
-          rejectionReason: profile.rejection_reason,
-        }
-        console.log('Setting user state:', userData)
-        setUser(userData)
-      }
-    } catch (error) {
-      console.error('Unexpected error in loadUserProfile:', error)
-      
-      // Check if it's a fetch/network error and retry
-      const isAbortError = error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted'))
-      const isFetchError = error instanceof Error && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))
-      
-      if ((isAbortError || isFetchError) && retryCount < 2) {
-        console.log(`Connection error detected (${error instanceof Error ? error.message : 'unknown'}), retrying (attempt ${retryCount + 2}/3)...`)
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        return loadUserProfile(authUser, retryCount + 1)
-      }
-      
-      // Log final failure with helpful message
-      console.error('Failed to load user profile:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        type: error instanceof Error ? error.name : typeof error,
-        retries: retryCount,
-        suggestion: 'Check Supabase connection, RLS policies, and network connectivity'
-      })
-    }
-  }
-
   const login = async (email: string, password: string, role: UserRole) => {
     try {
-      console.log('Login attempt:', { email, role })
+      console.log('[AuthContext] Login attempt:', { email, role })
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -186,7 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
       
-      console.log('Auth successful, user ID:', data.user.id)
+      console.log('[AuthContext] Credentials valid, user ID:', data.user.id)
 
       // Verify role and approval status
       const { data: profile, error: profileError } = await supabase
@@ -195,17 +223,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', data.user.id)
         .single()
 
-      console.log('Profile query result:', { profile, profileError })
+      console.log('[AuthContext] Profile validation:', { profile, profileError })
 
       if (profileError) {
-        console.error('Profile error details:', {
-          error: profileError,
-          message: profileError.message,
-          code: profileError.code,
-          details: profileError.details,
-          hint: profileError.hint,
-          stringified: JSON.stringify(profileError)
-        })
+        console.error('[AuthContext] Profile load failed:', profileError)
         await supabase.auth.signOut()
         throw new Error('Unable to load user profile. Please ensure the database tables are set up correctly.')
       }
@@ -215,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('User profile not found. Please contact support.')
       }
 
-      console.log('Profile loaded successfully:', profile)
+      console.log('[AuthContext] Profile loaded, validating role match')
 
       if (profile.role !== role) {
         await supabase.auth.signOut()
@@ -234,28 +255,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(`Your account registration was declined.${reason}\n\nPlease contact administration for more details.`)
       }
 
-      // Fetch full profile with name
+      // Fetch full profile and set user state
       const { data: fullProfile } = await supabase
         .from('users')
         .select('*')
         .eq('id', data.user.id)
         .single()
 
-      // Set user from full profile
-      setUser({
-        id: data.user.id,
-        email: fullProfile?.email || data.user.email || '',
-        name: fullProfile?.full_name || 'User',
-        role: profile.role,
-        hostelName: fullProfile?.hostel_name || 'N/A',
-        roomNumber: fullProfile?.room_number,
-        studentId: fullProfile?.student_id,
-        phoneNumber: fullProfile?.phone_number,
-        department: fullProfile?.department,
-        approvalStatus: profile.approval_status,
-      })
+      if (fullProfile) {
+        setUser(buildUserFromProfile(fullProfile))
+      }
 
-      console.log('User state set, login complete')
+      console.log('[AuthContext] Login complete, user state set')
     } catch (error) {
       console.error('Login error:', error)
       throw error
@@ -312,11 +323,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Only load profile for admins (auto-approved)
       // Students and caretakers will be in pending state
       if (userData.role === 'admin') {
-        // Small delay to ensure trigger has executed
+        // Small delay to ensure database trigger has executed
         await new Promise(resolve => setTimeout(resolve, 500))
-        await loadUserProfile(authData.user)
+        
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single()
+        
+        if (profile) {
+          setUser(buildUserFromProfile(profile))
+        }
       } else {
-        // Log out the user since they need approval
+        // Sign out - students/caretakers need admin approval first
         await supabase.auth.signOut()
       }
     } catch (error) {

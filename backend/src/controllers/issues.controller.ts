@@ -114,6 +114,7 @@ export class IssuesController {
    * GET /api/issues
    */
   static async getAllIssues(req: Request, res: Response): Promise<void> {
+    const user = req.user!;
     const pagination = parsePaginationParams(req.query as Record<string, unknown>);
     const offset = getOffset(pagination.page, pagination.limit);
 
@@ -123,6 +124,12 @@ export class IssuesController {
       .select('*, reporter:users!reported_by(full_name, email, hostel_name, room_number), assignee:users!assigned_to(full_name, email)', {
         count: 'exact',
       });
+
+    // CARETAKER SCOPE: Filter issues to only show those from the caretaker's hostel/block
+    // Admins can see all issues across all blocks
+    if (user.role === 'caretaker' && user.hostel_name) {
+      query = query.eq('hostel_name', user.hostel_name);
+    }
 
     // Apply filters
     if (req.query.status) {
@@ -193,10 +200,18 @@ export class IssuesController {
   /**
    * Assign an issue to a caretaker
    * PATCH /api/issues/:id/assign
+   * NOTE: Only admins can assign issues. Caretakers cannot manually assign.
    */
   static async assign(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     const user = req.user!;
+
+    // SAFETY CHECK: Caretakers cannot assign issues - only admins can
+    if (user.role === 'caretaker') {
+      sendError(res, 'Caretakers cannot assign issues. Only admins can assign issues to caretakers.', 403);
+      return;
+    }
+
     const data = validate(assignIssueSchema, req.body);
 
     // Fetch current issue
