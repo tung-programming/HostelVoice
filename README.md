@@ -49,7 +49,7 @@
 
 ### Watch HostelVoice in Action!
 
-[![Demo Video](https://img.shields.io/badge/▶_Watch_Demo-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](YOUR_GOOGLE_DRIVE_LINK_HERE)
+[![Demo Video](https://img.shields.io/badge/▶_Watch_Demo-Google_Drive-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/185gHpxmdteuApplxYByfWlYYzjaGto9i/view?usp=sharing)
 
 📺 **[Click here to watch the full demo video](https://drive.google.com/file/d/185gHpxmdteuApplxYByfWlYYzjaGto9i/view?usp=sharing)**
 
@@ -110,74 +110,72 @@ Traditional hostel management faces several challenges:
 ### High-Level Overview
 
 ```
-
-                              HOSTELVOICE SYSTEM                             
-
-                                                                             
-                   
-                                                                      
-     STUDENTS               CARETAKERS               ADMINS           
-                                                                      
-                   
-                                                                          
-                          
-                                                                            
-                                                                            
-    
-                           NEXT.JS 16 FRONTEND                            
-                           (Port 3000)                                     
-               
-      Landing        Auth Pages     Dashboard      Role-Based     
-      Page           Login/Reg      Components     Views          
-               
-    
-                                                                            
-                         HTTP REST API + JWT                                 
-                                                                            
-    
-                         EXPRESS.JS BACKEND                                
-                         (Port 3001)                                       
-                          
-      Controllers     Middleware      Services                      
-      - Issues        - Auth JWT      - Audit Logs                  
-      - Leave         - Validation    - Notify                      
-      - Mess          - Error         - Analytics                   
-      - Lost/Found    - RBAC                                        
-                          
-    
-                                                                            
-                         Supabase Admin Client                               
-                                                                            
-    
-                         SUPABASE (PostgreSQL)                             
-               
-      users          issues         leave_apps     mess_menu      
-      residents      lost_found     announce       feedback       
-      audit_logs     notifies       approvals      storage        
-               
-    
-                                                                             
-
++===========================================================================+
+|                          HOSTELVOICE SYSTEM                               |
++===========================================================================+
+|                                                                           |
+|    +-------------+      +-------------+      +-------------+              |
+|    |  STUDENTS   |      | CARETAKERS  |      |   ADMINS    |              |
+|    +------+------+      +------+------+      +------+------+              |
+|           |                    |                    |                     |
+|           +--------------------+--------------------+                     |
+|                                |                                          |
+|                                v                                          |
+|    +---------------------------------------------------------------------+|
+|    |                    NEXT.JS 16 FRONTEND (Port 3000)                  ||
+|    |  +-----------+  +-----------+  +-----------+  +-----------+         ||
+|    |  | Landing   |  | Auth      |  | Dashboard |  | Role-Based|         ||
+|    |  | Page      |  | Login/Reg |  | Components|  | Views     |         ||
+|    |  +-----------+  +-----------+  +-----------+  +-----------+         ||
+|    +---------------------------------------------------------------------+|
+|                                |                                          |
+|                       HTTP REST API + JWT                                 |
+|                                |                                          |
+|                                v                                          |
+|    +---------------------------------------------------------------------+|
+|    |                   EXPRESS.JS BACKEND (Port 3001)                    ||
+|    |  +-----------+  +-----------+  +-----------+                        ||
+|    |  |Controllers|  |Middleware |  | Services  |                        ||
+|    |  | - Issues  |  | - Auth JWT|  | - Audit   |                        ||
+|    |  | - Leave   |  | - Validate|  | - Notify  |                        ||
+|    |  | - Mess    |  | - Error   |  | - Analytics                        ||
+|    |  | - L&F     |  | - RBAC    |  |           |                        ||
+|    |  +-----------+  +-----------+  +-----------+                        ||
+|    +---------------------------------------------------------------------+|
+|                                |                                          |
+|                       Supabase Admin Client                               |
+|                                |                                          |
+|                                v                                          |
+|    +---------------------------------------------------------------------+|
+|    |                    SUPABASE (PostgreSQL)                            ||
+|    |  +-----------+  +-----------+  +-----------+  +-----------+         ||
+|    |  | users     |  | issues    |  | leave_apps|  | mess_menu |         ||
+|    |  | residents |  | lost_found|  | announce  |  | feedback  |         ||
+|    |  | audit_logs|  | notifies  |  | approvals |  | storage   |         ||
+|    |  +-----------+  +-----------+  +-----------+  +-----------+         ||
+|    +---------------------------------------------------------------------+|
+|                                                                           |
++===========================================================================+
 ```
 
 ### Architecture Pattern: Backend-First Design
 
 ```
-                  
-                                                                     
-  Next.js 16       Express.js        Supabase      
-  Frontend         HTTP     Backend API      Admin     PostgreSQL    
-  (Port 3000)      REST     (Port 3001)      Client    Database      
-                                                   
-                  
-                                                              
-       Auth Only                   All Data Ops               
-                                   + Audit Logs               
-                                   + Notifications            
-                                  
-          Supabase Auth                                        
-          (Login/Register)                                     
-                                   
++------------------+         +------------------+         +------------------+
+|                  |         |                  |         |                  |
+|   Next.js 16     |  HTTP   |   Express.js     |  Admin  |    Supabase      |
+|   Frontend       +-------->+   Backend API    +-------->+   PostgreSQL     |
+|   (Port 3000)    |  REST   |   (Port 3001)    |  Client |    Database      |
+|                  |<--------+                  |<--------+                  |
++--------+---------+         +------------------+         +------------------+
+         |                            |
+         | Auth Only                  | All Data Ops
+         |                            | + Audit Logs
+         |                            | + Notifications
+         v                            |
+   Supabase Auth                      |
+   (Login/Register)                   |
+         +----------------------------+
 ```
 
 **Why Backend-First?**
@@ -195,116 +193,116 @@ Traditional hostel management faces several challenges:
 
 ```
 New User Registration
-        
-         Visits /register  Selects Role (Student/Caretaker/Admin)
-        
-         Fills Form  Supabase Auth creates account (password encrypted)
-        
-         User record created  approval_status = 'pending'
-        
-         Admin sees approval request  Reviews & Approves/Rejects
-        
-         Approved  User can access dashboard
-            Rejected  Access denied with reason
+        |
+        +---> Visits /register ---> Selects Role (Student/Caretaker/Admin)
+        |
+        +---> Fills Form ---> Supabase Auth creates account (password encrypted)
+        |
+        +---> User record created ---> approval_status = 'pending'
+        |
+        +---> Admin sees approval request ---> Reviews & Approves/Rejects
+        |
+        +---> Approved ---> User can access dashboard
+              Rejected ---> Access denied with reason
 ```
 
-### 2 Issue/Complaint Tracking Flow
+### 2️⃣ Issue/Complaint Tracking Flow
 
 ```
 Student Reports Issue                    Caretaker Manages
-                                               
-         Creates issue                         Sees all hostel issues
-          (title, category,                      (filtered by assignment)
-           priority, location)                 
-                                                Assigns to staff
-         Submits via API                      
-                                                Updates status
-         Gets notification                      (open  in_progress  resolved)
-          on status changes                    
-                                                Issue resolved  Student notified
-         Tracks progress in dashboard             Audit log created
+        |                                       |
+        +---> Creates issue                     +---> Sees all hostel issues
+        |     (title, category,                 |     (filtered by assignment)
+        |      priority, location)              |
+        |                                       +---> Assigns to staff
+        +---> Submits via API                   |
+        |                                       +---> Updates status
+        +---> Gets notification                 |     (open -> in_progress -> resolved)
+        |     on status changes                 |
+        |                                       +---> Issue resolved -> Student notified
+        +---> Tracks progress in dashboard            Audit log created
 ```
 
-### 3 Leave Application Flow
+### 3️⃣ Leave Application Flow
 
 ```
++============================================================================+
+|                         STUDENT LEAVE FLOW                                 |
++============================================================================+
+|                                                                            |
+|  Student                    Caretaker                    Result            |
+|     |                          |                           |               |
+|     +---> Apply Leave -------->+---> Reviews Request       |               |
+|     |     (dates, reason,      |                           |               |
+|     |      destination)        +---> Approves ------------>+ Leave Granted |
+|     |                          |        or                 |               |
+|     +<--- Checks Status <------+---> Rejects ------------->+ Denied        |
+|     |                          |        or                 | w/ reason     |
+|     +<--- Gets Notified        +---> Needs Info ---------->+ Pending       |
+|                                                                            |
++============================================================================+
 
-                         STUDENT LEAVE FLOW                             
-
-                                                                        
-  Student                    Caretaker                    Result        
-                                                                     
-      Apply Leave   Reviews Request                     
-       (dates, reason,                                               
-        destination)            Approves   Leave    
-                                     or                    Granted    
-      Checks Status   Rejects   Denied   
-                                     or                    w/ reason  
-      Gets Notified            Needs Info   Pending  
-                                                                        
-
-
-
-                        CARETAKER LEAVE FLOW                            
-
-                                                                        
-  Caretaker                    Admin                      Result        
-                                                                     
-      Apply Leave   Reviews Request                     
-       (dates, reason,                                               
-        replacement)            Assigns Replacement   Approved 
-                                                           w/ backup  
-      Checks Status   Approves/Rejects  Result     
-                                                           Notified   
-      Gets Notified            Ensures Hostel Coverage              
-                                                                        
-
++============================================================================+
+|                        CARETAKER LEAVE FLOW                                |
++============================================================================+
+|                                                                            |
+|  Caretaker                    Admin                      Result            |
+|     |                          |                           |               |
+|     +---> Apply Leave -------->+---> Reviews Request       |               |
+|     |     (dates, reason,      |                           |               |
+|     |      replacement)        +---> Assigns Replacement ->+ Approved      |
+|     |                          |                           | w/ backup     |
+|     +<--- Checks Status <------+---> Approves/Rejects ---->+ Result        |
+|     |                          |                           | Notified      |
+|     +<--- Gets Notified        +---> Ensures Hostel Coverage               |
+|                                                                            |
++============================================================================+
 ```
 
-### 4 Mess Management Flow
+### 4️⃣ Mess Management Flow
 
 ```
 Caretaker Uploads Menu                  Students Interact
-                                               
-         Uploads menu card image               Views weekly menu
-          (PNG/JPG  Supabase Storage)           (calendar format)
-                                               
-         Fills weekly calendar                 Downloads menu card
-          (7 days  4 meals)                   
-                                                Submits feedback
-         System validates                       (rating + comments)
-          (all meals filled)                   
-                                                Sees caretaker response
-         Menu visible to students
+        |                                       |
+        +---> Uploads menu card image           +---> Views weekly menu
+        |     (PNG/JPG -> Supabase Storage)     |     (calendar format)
+        |                                       |
+        +---> Fills weekly calendar             +---> Downloads menu card
+        |     (7 days x 4 meals)                |
+        |                                       +---> Submits feedback
+        +---> System validates                  |     (rating + comments)
+        |     (all meals filled)                |
+        |                                       +---> Sees caretaker response
+        +---> Menu visible to students
 
 Admin monitors all hostels' mess operations & analytics
 ```
 
-### 5 Lost & Found Flow
+### 5️⃣ Lost & Found Flow
 
 ```
 Item Lost                              Item Found
-                                          
-     Report lost item                     Report found item
-      (description, location,               (description, where found,
-       when lost, contact)                   current location)
-                                          
-              
-             SMART MATCHING SYSTEM      
-             - Same category            
-             - Similar description      
-             - Nearby location          
-             - Recent timeframe         
-              
-                                         
-                                         
-             Notification sent            
-             to potential owners          
-                                          
-     Contact & Claim 
-                      
-                      
-               Item Returned! 
+    |                                      |
+    +---> Report lost item                 +---> Report found item
+    |     (description, location,          |     (description, where found,
+    |      when lost, contact)             |      current location)
+    |                                      |
+    |      +==========================+    |
+    |      |   SMART MATCHING SYSTEM  |    |
+    |      |   - Same category        |    |
+    |      |   - Similar description  |    |
+    |      |   - Nearby location      |    |
+    |      |   - Recent timeframe     |    |
+    |      +==========================+    |
+    |                  |                   |
+    |                  v                   |
+    |         Notification sent            |
+    |         to potential owners          |
+    |                                      |
+    +----------> Contact & Claim <---------+
+                      |
+                      v
+               Item Returned! ✅
 ```
 
 ---
@@ -421,42 +419,45 @@ Item Lost                              Item Found
 ### Multi-Layer Security Model
 
 ```
-
-                     SECURITY ARCHITECTURE                       
-
-                                                                 
-  Layer 1: FRONTEND PROTECTION                                   
-     
-    Next.js Middleware guards /dashboard/* routes            
-    AuthContext manages user state globally                  
-    Role-based UI rendering (hide unauthorized features)     
-     
-                                                                
-  Layer 2: API PROTECTION                                        
-     
-    JWT token required for all API calls                     
-    authMiddleware verifies token on every request           
-    Role-based filtering in controllers                      
-    Zod validation prevents malformed requests               
-     
-                                                                
-  Layer 3: DATABASE PROTECTION                                   
-     
-    Row Level Security (RLS) policies                        
-    Backend uses service role (controlled bypass)            
-    Foreign key constraints for data integrity               
-    Check constraints for valid enum values                  
-     
-                                                                
-  Layer 4: AUDIT & MONITORING                                    
-     
-    All critical actions logged to audit_logs table          
-    Before/after state captured for changes                  
-    User ID, IP address, timestamp recorded                  
-    Complete accountability trail                            
-     
-                                                                 
-
++=========================================================================+
+|                       SECURITY ARCHITECTURE                             |
++=========================================================================+
+|                                                                         |
+|  Layer 1: FRONTEND PROTECTION                                           |
+|  +---------------------------------------------------------------------+|
+|  |  * Next.js Middleware guards /dashboard/* routes                   ||
+|  |  * AuthContext manages user state globally                         ||
+|  |  * Role-based UI rendering (hide unauthorized features)            ||
+|  +---------------------------------------------------------------------+|
+|                               |                                         |
+|                               v                                         |
+|  Layer 2: API PROTECTION                                                |
+|  +---------------------------------------------------------------------+|
+|  |  * JWT token required for all API calls                            ||
+|  |  * authMiddleware verifies token on every request                  ||
+|  |  * Role-based filtering in controllers                             ||
+|  |  * Zod validation prevents malformed requests                      ||
+|  +---------------------------------------------------------------------+|
+|                               |                                         |
+|                               v                                         |
+|  Layer 3: DATABASE PROTECTION                                           |
+|  +---------------------------------------------------------------------+|
+|  |  * Row Level Security (RLS) policies                               ||
+|  |  * Backend uses service role (controlled bypass)                   ||
+|  |  * Foreign key constraints for data integrity                      ||
+|  |  * Check constraints for valid enum values                         ||
+|  +---------------------------------------------------------------------+|
+|                               |                                         |
+|                               v                                         |
+|  Layer 4: AUDIT & MONITORING                                            |
+|  +---------------------------------------------------------------------+|
+|  |  * All critical actions logged to audit_logs table                 ||
+|  |  * Before/after state captured for changes                         ||
+|  |  * User ID, IP address, timestamp recorded                         ||
+|  |  * Complete accountability trail                                   ||
+|  +---------------------------------------------------------------------+|
+|                                                                         |
++=========================================================================+
 ```
 
 ### Role-Based Access Control
@@ -482,56 +483,56 @@ Item Lost                              Item Found
 ### Entity Relationship Overview
 
 ```
-
-                         DATABASE SCHEMA                                  
-
-                                                                          
-                            
-       USERS        ISSUES     ASSIGNMENTS       
-                                                                   
-     id                    id                    staff_id          
-     email                 title                 issue_id          
-     full_name             description                
-     role                  category                                  
-     hostel_name           priority                                  
-     room_number           status                                    
-     approval_             reported_by                               
-       status              assigned_to                               
-                                           
-                                                                         
-                                                                         
-                            
-     RESIDENTS             LOST_FOUND            LEAVE_APPS        
-                                                                   
-     guardian              item_name             user_id           
-     emergency             type                  start_date        
-     contacts              status                end_date          
-     address               location              status            
-              contact               approved_by       
-                                           
-                                                                          
-                            
-    ANNOUNCEMENTS           MESS_MENU             FEEDBACK         
-                                                                   
-     title                 week_start            user_id           
-     content               meals_data            rating            
-     target                menu_image            comment           
-     is_pinned             hostel_name           response          
-     created_by                                                    
-                            
-                                                                          
-                                           
-     AUDIT_LOGS           NOTIFICATIONS                              
-                                                                     
-     user_id               user_id                                   
-     action                title                                     
-     entity_type           message                                   
-     old_data              is_read                                   
-     new_data              type                                      
-     ip_address                                                      
-                                           
-                                                                          
-
++=========================================================================+
+|                          DATABASE SCHEMA                                |
++=========================================================================+
+|                                                                         |
+|  +---------------+     +---------------+     +---------------+          |
+|  |    USERS      |     |    ISSUES     |     |  ASSIGNMENTS  |          |
+|  +---------------+     +---------------+     +---------------+          |
+|  | id            |---->| id            |<----| staff_id      |          |
+|  | email         |     | title         |     | issue_id      |          |
+|  | full_name     |     | description   |     +---------------+          |
+|  | role          |     | category      |                                |
+|  | hostel_name   |     | priority      |                                |
+|  | room_number   |     | status        |                                |
+|  | approval_     |     | reported_by   |                                |
+|  |   status      |     | assigned_to   |                                |
+|  +-------+-------+     +---------------+                                |
+|          |                                                              |
+|          v                                                              |
+|  +---------------+     +---------------+     +---------------+          |
+|  |   RESIDENTS   |     |  LOST_FOUND   |     |  LEAVE_APPS   |          |
+|  +---------------+     +---------------+     +---------------+          |
+|  | guardian      |     | item_name     |     | user_id       |          |
+|  | emergency     |     | type          |     | start_date    |          |
+|  | contacts      |     | status        |     | end_date      |          |
+|  | address       |     | location      |     | status        |          |
+|  +---------------+     | contact       |     | approved_by   |          |
+|                        +---------------+     +---------------+          |
+|                                                                         |
+|  +---------------+     +---------------+     +---------------+          |
+|  | ANNOUNCEMENTS |     |   MESS_MENU   |     |   FEEDBACK    |          |
+|  +---------------+     +---------------+     +---------------+          |
+|  | title         |     | week_start    |     | user_id       |          |
+|  | content       |     | meals_data    |     | rating        |          |
+|  | target        |     | menu_image    |     | comment       |          |
+|  | is_pinned     |     | hostel_name   |     | response      |          |
+|  | created_by    |     +---------------+     +---------------+          |
+|  +---------------+                                                      |
+|                                                                         |
+|  +---------------+     +---------------+                                |
+|  |  AUDIT_LOGS   |     | NOTIFICATIONS |                                |
+|  +---------------+     +---------------+                                |
+|  | user_id       |     | user_id       |                                |
+|  | action        |     | title         |                                |
+|  | entity_type   |     | message       |                                |
+|  | old_data      |     | is_read       |                                |
+|  | new_data      |     | type          |                                |
+|  | ip_address    |     +---------------+                                |
+|  +---------------+                                                      |
+|                                                                         |
++=========================================================================+
 ```
 
 ### Core Tables Summary
@@ -627,30 +628,30 @@ npm run dev
 ## 🔄 Data Flow Summary
 
 ```
-User Action  React Component  API Client (lib/api.ts)
-                                      
-                         JWT Token Auto-Attached
-                                      
-                                      
-                            HTTP Request  Express Backend
-                                                
-                               Auth Middleware Verifies Token
-                                                
-                                                
-                              Controller Handles Business Logic
-                                                
-                               Role-Based Filtering Applied
-                                                
-                                                
-                             Supabase Query (Admin Client)
-                                                
-                                    Data Retrieved/Modified
-                                                
-                                                
-                              Audit Log Created  Response Sent
-                                                      
-                                                      
-                              Frontend Receives Data  UI Updates
+User Action --> React Component --> API Client (lib/api.ts)
+                                           |
+                              JWT Token Auto-Attached
+                                           |
+                                           v
+                               HTTP Request --> Express Backend
+                                                      |
+                                  Auth Middleware Verifies Token
+                                                      |
+                                                      v
+                                 Controller Handles Business Logic
+                                                      |
+                                  Role-Based Filtering Applied
+                                                      |
+                                                      v
+                                Supabase Query (Admin Client)
+                                                      |
+                                   Data Retrieved/Modified
+                                                      |
+                                                      v
+                                 Audit Log Created --> Response Sent
+                                                            |
+                                                            v
+                                 Frontend Receives Data --> UI Updates
 ```
 
 ---
