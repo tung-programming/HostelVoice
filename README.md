@@ -61,8 +61,10 @@ _The demo showcases all features including user registration, issue tracking, le
 ## Deployed Link
 
 <div align=center>
-[Hostel Voice](https://hostelvoice.vercel.app)
-<p><b>If you want to create an admin account , the secret is HOSTEL2026ADMIN</b></p>
+<a href="https://hostelvoice.vercel.app" target="_blank">
+  <strong>Hostel Voice</strong>
+</a>
+<p>If you want to create an admin account , the secret is <b>HOSTEL2026ADMIN</b></p>
 </div>
 
 ---
