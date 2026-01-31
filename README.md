@@ -5,11 +5,12 @@
 
   <p>A comprehensive full-stack hostel management solution with <strong>Next.js 16</strong> frontend, <strong>Express.js</strong> backend API, and <strong>Supabase</strong> database. Features secure role-based authentication, real-time issue tracking, announcements, lost & found management, leave management, mess management, and analytics dashboard.</p>
 
-  [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
-  [![Express.js](https://img.shields.io/badge/Express.js-4.21-green)](https://expressjs.com/)
-  [![Supabase](https://img.shields.io/badge/Supabase-Database-green)](https://supabase.com/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8)](https://tailwindcss.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-4.21-green)](https://expressjs.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-green)](https://supabase.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8)](https://tailwindcss.com/)
+
 </div>
 
 ---
@@ -53,11 +54,15 @@
 
 📺 **[Click here to watch the full demo video](https://drive.google.com/file/d/185gHpxmdteuApplxYByfWlYYzjaGto9i/view?usp=sharing)**
 
-*The demo showcases all features including user registration, issue tracking, leave management, mess system, and analytics dashboard.*
+_The demo showcases all features including user registration, issue tracking, leave management, mess system, and analytics dashboard._
 
 </div>
 
----
+### Deployed Link
+
+[Hostel Voice](https://hostelvoice.vercel.app)
+If you want to create an admin account , the secret key:
+NEXT_PUBLIC_ADMIN_SECRET_CODE=HOSTEL2026ADMIN
 
 ## 📋 Table of Contents
 
@@ -93,15 +98,15 @@ Traditional hostel management faces several challenges:
 
 **HostelVoice** digitizes the entire hostel management workflow:
 
-| Problem | HostelVoice Solution |
-|---------|---------------------|
-| Lost complaints | Digital issue tracking with status updates |
-| Slow approvals | Instant leave applications with notification |
-| Poor communication | Targeted announcements with pinning |
+| Problem                | HostelVoice Solution                           |
+| ---------------------- | ---------------------------------------------- |
+| Lost complaints        | Digital issue tracking with status updates     |
+| Slow approvals         | Instant leave applications with notification   |
+| Poor communication     | Targeted announcements with pinning            |
 | Lost items never found | Smart matching & all-visible lost/found system |
-| Ignored mess feedback | Structured feedback with ratings & responses |
-| Overwhelmed caretakers | Organized dashboard with priorities |
-| No admin visibility | Analytics dashboard with real-time metrics |
+| Ignored mess feedback  | Structured feedback with ratings & responses   |
+| Overwhelmed caretakers | Organized dashboard with priorities            |
+| No admin visibility    | Analytics dashboard with real-time metrics     |
 
 ---
 
@@ -179,6 +184,7 @@ Traditional hostel management faces several challenges:
 ```
 
 **Why Backend-First?**
+
 - ✅ Centralized business logic
 - ✅ Consistent authorization checks
 - ✅ Complete audit trail of all actions
@@ -311,70 +317,70 @@ Item Lost                              Item Found
 
 ### 🔐 Authentication & Security
 
-| Feature | Description |
-|---------|-------------|
-| Role-Based Access | Student, Caretaker, Admin with different permissions |
-| Admin Approval System | New users require admin approval to join |
-| JWT Authentication | Secure token-based auth with auto-refresh |
-| Protected Routes | Middleware guards all dashboard pages |
-| Audit Logging | Complete trail of all system actions |
+| Feature               | Description                                          |
+| --------------------- | ---------------------------------------------------- |
+| Role-Based Access     | Student, Caretaker, Admin with different permissions |
+| Admin Approval System | New users require admin approval to join             |
+| JWT Authentication    | Secure token-based auth with auto-refresh            |
+| Protected Routes      | Middleware guards all dashboard pages                |
+| Audit Logging         | Complete trail of all system actions                 |
 
 ### 📋 Issue & Complaint Tracking
 
-| Feature | Description |
-|---------|-------------|
+| Feature             | Description                                        |
+| ------------------- | -------------------------------------------------- |
 | Multiple Categories | Maintenance, Cleaning, Security, Facilities, Other |
-| Priority Levels | Low, Medium, High, Urgent |
-| Status Tracking | Open  In Progress  Resolved |
-| Assignment System | Caretakers assign issues to staff |
-| Real-time Updates | Notifications on status changes |
+| Priority Levels     | Low, Medium, High, Urgent                          |
+| Status Tracking     | Open In Progress Resolved                          |
+| Assignment System   | Caretakers assign issues to staff                  |
+| Real-time Updates   | Notifications on status changes                    |
 
 ### 🏖️ Leave Management
 
-| Feature | Students | Caretakers |
-|---------|----------|------------|
-| Apply | Submit with dates & reason | Submit with replacement suggestion |
-| Approval | Caretaker approves/rejects | Admin approves with coverage |
-| Track | View status & comments | View calendar & assignments |
-| Notifications | Status change alerts | Approval notifications |
+| Feature       | Students                   | Caretakers                         |
+| ------------- | -------------------------- | ---------------------------------- |
+| Apply         | Submit with dates & reason | Submit with replacement suggestion |
+| Approval      | Caretaker approves/rejects | Admin approves with coverage       |
+| Track         | View status & comments     | View calendar & assignments        |
+| Notifications | Status change alerts       | Approval notifications             |
 
 ### 🍽️ Mess Management
 
-| Feature | Description |
-|---------|-------------|
-| Menu Upload | Weekly calendar with all meals (Breakfast, Lunch, Snacks, Dinner) |
-| Menu Card | Image upload for physical menu display |
-| Feedback System | Star ratings + comments from students |
-| Response Mechanism | Caretakers respond to feedback |
+| Feature            | Description                                                       |
+| ------------------ | ----------------------------------------------------------------- |
+| Menu Upload        | Weekly calendar with all meals (Breakfast, Lunch, Snacks, Dinner) |
+| Menu Card          | Image upload for physical menu display                            |
+| Feedback System    | Star ratings + comments from students                             |
+| Response Mechanism | Caretakers respond to feedback                                    |
 
 ### 🔍 Lost & Found
 
-| Feature | Description |
-|---------|-------------|
-| Report Lost Items | Detailed form with location, time, description |
-| Report Found Items | Track found items for recovery |
-| Smart Matching | Algorithm notifies potential matches |
-| All-Visible | Everyone can see all items for better recovery |
-| Claim System | Track claimed and returned items |
+| Feature            | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| Report Lost Items  | Detailed form with location, time, description |
+| Report Found Items | Track found items for recovery                 |
+| Smart Matching     | Algorithm notifies potential matches           |
+| All-Visible        | Everyone can see all items for better recovery |
+| Claim System       | Track claimed and returned items               |
 
 ### 📢 Announcements
 
-| Feature | Description |
-|---------|-------------|
-| Targeted Posting | Send to All, Students only, or Staff only |
-| Pin Important | Pinned announcements appear at top |
-| CRUD Operations | Create, read, update, delete announcements |
-| Role-Based | Only caretakers and admins can post |
+| Feature          | Description                                |
+| ---------------- | ------------------------------------------ |
+| Targeted Posting | Send to All, Students only, or Staff only  |
+| Pin Important    | Pinned announcements appear at top         |
+| CRUD Operations  | Create, read, update, delete announcements |
+| Role-Based       | Only caretakers and admins can post        |
 
 ### 📊 Analytics Dashboard
 
-| Metric | Available To |
-|--------|--------------|
-| Total Issues (Open/Resolved) | All roles |
-| Leave Statistics | Caretakers, Admins |
-| User Approval Stats | Admins |
-| Mess Ratings | Caretakers, Admins |
-| Hostel-wise Breakdown | Admins |
+| Metric                       | Available To       |
+| ---------------------------- | ------------------ |
+| Total Issues (Open/Resolved) | All roles          |
+| Leave Statistics             | Caretakers, Admins |
+| User Approval Stats          | Admins             |
+| Mess Ratings                 | Caretakers, Admins |
+| Hostel-wise Breakdown        | Admins             |
 
 ---
 
@@ -382,35 +388,35 @@ Item Lost                              Item Found
 
 ### Frontend
 
-| Technology | Purpose |
-|------------|---------|
-| **Next.js 16** | React framework with App Router |
-| **React 19** | UI library with latest features |
-| **TypeScript 5.9** | Type-safe development |
-| **Tailwind CSS 4.0** | Utility-first styling |
-| **Shadcn/ui** | 60+ beautiful UI components |
-| **Recharts** | Analytics visualizations |
-| **Sonner** | Toast notifications |
+| Technology           | Purpose                         |
+| -------------------- | ------------------------------- |
+| **Next.js 16**       | React framework with App Router |
+| **React 19**         | UI library with latest features |
+| **TypeScript 5.9**   | Type-safe development           |
+| **Tailwind CSS 4.0** | Utility-first styling           |
+| **Shadcn/ui**        | 60+ beautiful UI components     |
+| **Recharts**         | Analytics visualizations        |
+| **Sonner**           | Toast notifications             |
 
 ### Backend
 
-| Technology | Purpose |
-|------------|---------|
+| Technology          | Purpose                     |
+| ------------------- | --------------------------- |
 | **Express.js 4.21** | Fast, minimal web framework |
-| **Node.js** | JavaScript runtime |
-| **TypeScript** | Type-safe backend code |
-| **Zod** | Request validation schemas |
-| **JWT** | Token-based authentication |
+| **Node.js**         | JavaScript runtime          |
+| **TypeScript**      | Type-safe backend code      |
+| **Zod**             | Request validation schemas  |
+| **JWT**             | Token-based authentication  |
 
 ### Database & Services
 
-| Technology | Purpose |
-|------------|---------|
-| **Supabase** | Backend as a Service |
-| **PostgreSQL** | Relational database |
+| Technology             | Purpose                       |
+| ---------------------- | ----------------------------- |
+| **Supabase**           | Backend as a Service          |
+| **PostgreSQL**         | Relational database           |
 | **Row Level Security** | Database-level access control |
-| **Supabase Storage** | File uploads (menu cards) |
-| **Supabase Auth** | Authentication service |
+| **Supabase Storage**   | File uploads (menu cards)     |
+| **Supabase Auth**      | Authentication service        |
 
 ---
 
@@ -462,19 +468,19 @@ Item Lost                              Item Found
 
 ### Role-Based Access Control
 
-| Action | Student | Caretaker | Admin |
-|--------|:-------:|:---------:|:-----:|
-| View own issues | ✅ | ✅ | ✅ |
-| View hostel issues | ❌ | ✅ | ✅ |
-| Manage issues | ❌ | ✅ | ✅ |
-| Post announcements | ❌ | ✅ | ✅ |
-| Approve students | ❌ | ❌ | ✅ |
-| Approve caretakers | ❌ | ❌ | ✅ |
-| View all analytics | ❌ | ❌ | ✅ |
-| Upload mess menu | ❌ | ✅ | ✅ |
-| Apply student leave | ✅ | ❌ | ❌ |
-| Review student leave | ❌ | ✅ | ✅ |
-| Review caretaker leave | ❌ | ❌ | ✅ |
+| Action                 | Student | Caretaker | Admin |
+| ---------------------- | :-----: | :-------: | :---: |
+| View own issues        |   ✅    |    ✅     |  ✅   |
+| View hostel issues     |   ❌    |    ✅     |  ✅   |
+| Manage issues          |   ❌    |    ✅     |  ✅   |
+| Post announcements     |   ❌    |    ✅     |  ✅   |
+| Approve students       |   ❌    |    ❌     |  ✅   |
+| Approve caretakers     |   ❌    |    ❌     |  ✅   |
+| View all analytics     |   ❌    |    ❌     |  ✅   |
+| Upload mess menu       |   ❌    |    ✅     |  ✅   |
+| Apply student leave    |   ✅    |    ❌     |  ❌   |
+| Review student leave   |   ❌    |    ✅     |  ✅   |
+| Review caretaker leave |   ❌    |    ❌     |  ✅   |
 
 ---
 
@@ -537,17 +543,17 @@ Item Lost                              Item Found
 
 ### Core Tables Summary
 
-| Table | Purpose | Key Fields |
-|-------|---------|------------|
-| `users` | User accounts & profiles | role, hostel_name, approval_status |
-| `issues` | Complaints/requests | category, priority, status, assigned_to |
-| `announcements` | Hostel notices | target_audience, is_pinned |
-| `lost_found` | Lost/found items | type, status, location, contact |
-| `leave_applications` | Leave requests | start/end dates, approval status |
-| `mess_menu` | Weekly menus | meals data (JSON), menu image URL |
-| `mess_feedback` | Student ratings | rating (1-5), comments, response |
-| `audit_logs` | Action tracking | action, old/new data, timestamp |
-| `notifications` | User alerts | type, message, is_read |
+| Table                | Purpose                  | Key Fields                              |
+| -------------------- | ------------------------ | --------------------------------------- |
+| `users`              | User accounts & profiles | role, hostel_name, approval_status      |
+| `issues`             | Complaints/requests      | category, priority, status, assigned_to |
+| `announcements`      | Hostel notices           | target_audience, is_pinned              |
+| `lost_found`         | Lost/found items         | type, status, location, contact         |
+| `leave_applications` | Leave requests           | start/end dates, approval status        |
+| `mess_menu`          | Weekly menus             | meals data (JSON), menu image URL       |
+| `mess_feedback`      | Student ratings          | rating (1-5), comments, response        |
+| `audit_logs`         | Action tracking          | action, old/new data, timestamp         |
+| `notifications`      | User alerts              | type, message, is_read                  |
 
 ---
 
@@ -589,7 +595,7 @@ npm run dev
 
 1. **Register Admin account first** (auto-approved)
 2. Register student/caretaker accounts
-3. Login as Admin  Approve pending users
+3. Login as Admin Approve pending users
 4. Users can now login and use the system
 
 ---
@@ -598,30 +604,30 @@ npm run dev
 
 ### ✅ Implemented Features (January 2026)
 
-| Module | Status | Description |
-|--------|:------:|-------------|
-| Authentication | ✅ | JWT-based with role management |
-| User Approval | ✅ | Admin approval workflow |
-| Issue Tracking | ✅ | Full CRUD with assignment |
-| Announcements | ✅ | Targeted posting with pins |
-| Lost & Found | ✅ | Smart matching system |
-| Student Leave | ✅ | Application & approval flow |
-| Caretaker Leave | ✅ | With replacement assignment |
-| Mess Menu | ✅ | Weekly calendar + image upload |
-| Mess Feedback | ✅ | Ratings and response system |
-| Analytics | ✅ | Role-specific dashboards |
-| Audit Logging | ✅ | Complete action trail |
-| Notifications | ✅ | In-app notification system |
+| Module          | Status | Description                    |
+| --------------- | :----: | ------------------------------ |
+| Authentication  |   ✅   | JWT-based with role management |
+| User Approval   |   ✅   | Admin approval workflow        |
+| Issue Tracking  |   ✅   | Full CRUD with assignment      |
+| Announcements   |   ✅   | Targeted posting with pins     |
+| Lost & Found    |   ✅   | Smart matching system          |
+| Student Leave   |   ✅   | Application & approval flow    |
+| Caretaker Leave |   ✅   | With replacement assignment    |
+| Mess Menu       |   ✅   | Weekly calendar + image upload |
+| Mess Feedback   |   ✅   | Ratings and response system    |
+| Analytics       |   ✅   | Role-specific dashboards       |
+| Audit Logging   |   ✅   | Complete action trail          |
+| Notifications   |   ✅   | In-app notification system     |
 
 ### Code Metrics
 
-| Metric | Count |
-|--------|-------|
-| Frontend Pages | 20+ |
-| Backend API Endpoints | 50+ |
-| UI Components | 60+ |
-| Database Tables | 12+ |
-| Lines of Code | ~15,000+ |
+| Metric                | Count    |
+| --------------------- | -------- |
+| Frontend Pages        | 20+      |
+| Backend API Endpoints | 50+      |
+| UI Components         | 60+      |
+| Database Tables       | 12+      |
+| Lines of Code         | ~15,000+ |
 
 ---
 
@@ -666,6 +672,6 @@ This project is licensed under the MIT License.
 
 **Built with ❤️ by Pranav & Tushar for better hostel management**
 
-*HostelVoice - Making Hostel Life Simpler*
+_HostelVoice - Making Hostel Life Simpler_
 
 </div>
