@@ -62,9 +62,11 @@ _The demo showcases all features including user registration, issue tracking, le
 
 <div align=center>
 <p>[Hostel Voice](https://hostelvoice.vercel.app)</p>
-If you want to create an admin account , the secret key:
-NEXT_PUBLIC_ADMIN_SECRET_CODE=HOSTEL2026ADMIN
+**If you want to create an admin account , the secret is HOSTEL2026ADMIN**
 </div>
+
+---
+
 ## 📋 Table of Contents
 
 - [Demo Video](#-demo-video)
